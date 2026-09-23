@@ -1,1 +1,1 @@
-# test-bible-small-group
+# graduated-bible-small-group
