@@ -42,27 +42,6 @@
       .print-shadow-none { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
       input, textarea { border: none !important; background: transparent !important; }
     }
-    
-    .member-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .photo-gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 12px;
-    }
-    
-    @media (max-width: 640px) {
-      .photo-gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
@@ -115,7 +94,7 @@
         </div>
         <h2 class="text-xl font-extrabold text-slate-900">Weekly Schedule & Interactive Boards</h2>
         <p class="text-sm text-slate-600 max-w-xl">
-          Meets on <strong>Weeks 1, 2, and 3</strong>. The <strong>last week(s) are Rest Weeks</strong>. Click <strong>"Open Board 📋"</strong> on any week to write notes, bible verses, and upload meeting photos.
+          Meets on <strong>Weeks 1 & 2</strong>. <strong>Week 3</strong> is the 🎓 <strong>Big Group Graduated Fellowship</strong>. The <strong>last week(s) are Rest Weeks</strong>. Click <strong>"Open Board 📋"</strong> on any week to write notes, bible verses, and upload photos.
         </p>
       </div>
 
@@ -132,19 +111,24 @@
 
     </div>
 
-    <!-- MEMBERS GALLERY BAR -->
-    <div class="bg-white px-6 py-4 rounded-2xl border border-slate-200 shadow-sm">
-      <div class="flex items-center justify-between flex-wrap gap-4 mb-3">
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-slate-400 uppercase">👥 Active Members:</span>
+    <!-- MEMBERS CHIPS BAR -->
+    <div class="bg-white px-6 py-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-wrap gap-3">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-400 uppercase">Active Cycle:</span>
+        <div id="membersChipList" class="flex flex-wrap gap-1.5">
+          <!-- Member Tags -->
         </div>
-        <span class="text-xs text-slate-400 italic">Leader • Open Prayer • Worship • Close Prayer</span>
       </div>
-      
-      <!-- Member Avatars with Names -->
-      <div id="memberAvatarsContainer" class="flex flex-wrap gap-3 items-center">
-        <!-- Member avatars and chips dynamically injected -->
-      </div>
+      <span class="text-xs text-slate-400 italic">Leader • Open Prayer • Worship • Close Prayer</span>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4 text-xs font-semibold">
+      <span class="text-slate-400 uppercase font-bold tracking-wider">Legend:</span>
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800"><i class="fa-solid fa-check"></i> Regular Meeting (Wk 1 & 2)</span>
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-100 text-purple-800"><i class="fa-solid fa-graduation-cap"></i> Big Group Graduated Fellowship (Wk 3)</span>
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800"><i class="fa-solid fa-bed"></i> Rest Week (Last)</span>
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-100 text-rose-700"><i class="fa-solid fa-umbrella-beach"></i> Public Holiday</span>
     </div>
 
     <!-- MAIN SCHEDULE SHEET TABLE -->
@@ -187,16 +171,16 @@
 
   <!-- WEEKLY STUDY BOARD MODAL (Notes, Scripture, Photos) -->
   <div id="boardModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto no-print">
-    <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-8">
+    <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-8">
       
       <!-- Modal Header -->
-      <div class="px-6 py-4 bg-gradient-to-r from-faith-700 to-faith-600 text-white flex justify-between items-center">
+      <div id="boardModalHeader" class="px-6 py-4 bg-gradient-to-r from-faith-700 to-faith-600 text-white flex justify-between items-center">
         <div>
           <div class="flex items-center gap-2">
             <span class="px-2 py-0.5 rounded-md bg-white/20 text-[11px] font-bold tracking-wider uppercase" id="boardWeekTag">Week 1</span>
             <span class="text-xs text-sky-100 font-medium" id="boardDateTitle">Friday, Oct 16 • 6:30 PM</span>
           </div>
-          <h3 class="text-lg font-bold mt-0.5">Fellowship Study Board & Photo Gallery</h3>
+          <h3 class="text-lg font-bold mt-0.5" id="boardModalTitle">Fellowship Study Board</h3>
         </div>
         <button onclick="closeBoardModal()" class="text-white/70 hover:text-white transition p-1">
           <i class="fa-solid fa-xmark text-xl"></i>
@@ -211,7 +195,7 @@
         <div><span class="font-bold text-purple-700">Close Prayer:</span> <span id="boardClosePrayName" class="font-semibold">—</span></div>
       </div>
 
-      <!-- Modal Body with Tabs -->
+      <!-- Modal Body -->
       <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
         <input type="hidden" id="activeBoardDateKey">
 
@@ -256,23 +240,21 @@
         </div>
 
         <!-- 3. Photo & Slides Gallery Box -->
-        <div class="space-y-3">
-          <div class="flex justify-between items-center">
+        <div>
+          <div class="flex justify-between items-center mb-2">
             <label class="text-xs font-bold text-slate-700 uppercase flex items-center gap-1.5">
-              <i class="fa-solid fa-images text-emerald-500"></i> Weekly Meeting Photos & Sermon Slides
+              <i class="fa-solid fa-images text-emerald-500"></i> Photos & Sermon Slides
             </label>
-            <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 text-faith-700 border border-sky-200 rounded-lg text-xs font-bold hover:bg-sky-100 transition">
+            <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 text-faith-700 border border-sky-200 rounded-lg text-xs font-bold hover:bg-sky-100 transition">
               <i class="fa-solid fa-cloud-arrow-up"></i> Upload Photo
               <input type="file" id="boardImageUploader" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
             </label>
           </div>
 
-          <!-- Photo Gallery Grid -->
-          <div id="boardPhotoGallery" class="photo-gallery-grid p-4 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
+          <!-- Photo Grid -->
+          <div id="boardPhotoGallery" class="grid grid-cols-3 sm:grid-cols-4 gap-3 min-h-[80px] p-3 bg-slate-50 border border-dashed border-slate-200 rounded-2xl items-center">
             <!-- Photos dynamically injected -->
           </div>
-          
-          <p class="text-xs text-slate-500 italic">💡 Tip: Upload photos from your meeting each week to create a lasting memory of your fellowship!</p>
         </div>
 
       </div>
@@ -337,24 +319,15 @@
     // =========================================================================
     // ⚙️ SUPABASE AUTO-CONFIG (Paste your Supabase credentials here)
     // =========================================================================
-    const SUPABASE_URL = "https://akayozpakcghrquyhjgu.supabase.co"; 
-    const SUPABASE_ANON_KEY = "sb_publishable_ZdSzJBPoqlV0TxNqg5Cuog_aW-EuFm1";
+    const SUPABASE_URL = "https://rwduotornfpbrdroxjne.supabase.co"; 
+    const SUPABASE_ANON_KEY = "sb_publishable__DauIC7vEqFuiQP0wgxifw_DjzcASSZ";
     // =========================================================================
 
     const DEFAULT_MEMBERS = ["Vichhai", "Lai", "David", "Bunthouern", "Vanny"];
-    const AVATAR_COLORS = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8"];
     let supabaseClient = null;
     let members = [];
     let customSchedules = {};
     let activeBoardPhotos = [];
-
-    // Generate avatar initials with color
-    function generateAvatar(name, index) {
-      const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
-      const color = AVATAR_COLORS[index % AVATAR_COLORS.length];
-      const svg = `<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="50%" fill="${color}"/><text x="50%" y="50%" font-size="16" font-weight="bold" fill="white" text-anchor="middle" dy=".3em" font-family="Plus Jakarta Sans">${initials}</text></svg>`;
-      return `data:image/svg+xml;base64,${btoa(svg)}`;
-    }
 
     // Auto-Connect Supabase
     async function autoConnectSupabase() {
@@ -364,7 +337,7 @@
         badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800";
         badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Local Mode (Paste Keys in Script)`;
         
-        members = DEFAULT_MEMBERS.map((name, i) => ({ id: i + 1, name, avatar: generateAvatar(name, i) }));
+        members = DEFAULT_MEMBERS.map((name, i) => ({ id: i + 1, name }));
         renderMembersChipList();
         generateSchedule();
         return;
@@ -398,9 +371,9 @@
       if (!data || data.length === 0) {
         const seedPayload = DEFAULT_MEMBERS.map((name, index) => ({ name, sort_order: index + 1 }));
         const { data: seeded } = await supabaseClient.from('members').insert(seedPayload).select();
-        if (seeded) members = seeded.map((m, i) => ({ ...m, avatar: generateAvatar(m.name, i) }));
+        if (seeded) members = seeded;
       } else {
-        members = data.map((m, i) => ({ ...m, avatar: generateAvatar(m.name, i) }));
+        members = data;
       }
 
       renderMembersChipList();
@@ -468,6 +441,7 @@
 
         const isRestWeek = weekNum > 3 || weekNum === totalFridays;
         const isHoliday = itemData.is_holiday || false;
+        const isBigGroup = (weekNum === 3) && !isRestWeek;
         const topicValue = itemData.topic || "";
         const hasNotesOrPhotos = (itemData.notes || itemData.verse || (itemData.images && itemData.images.length > 0));
 
@@ -491,7 +465,7 @@
             </td>
             <td colspan="4" class="py-4 px-4 text-center text-slate-400 italic">No meeting due to holiday</td>
             <td class="py-4 px-4">
-              <input type="text" value="${topicValue}" placeholder="Holiday note..." onchange="updateTopic('${dateKey}', this.value)" class="w-full bg-transparent text-xs text-slate-500 focus:outline-none" />
+              <input type="text" value="${topicValue}" placeholder="Holiday note..." onchange="updateTopic('${dateKey}', this.value)" class="w-full bg-transparent text-xs text-slate-500 focus:outline-none">
             </td>
             <td class="py-4 px-4 text-center">—</td>
             <td class="py-4 px-4 text-right no-print">
@@ -509,11 +483,55 @@
             </td>
             <td colspan="4" class="py-4 px-4 text-center text-slate-400 italic">Fellowship Break (No Meeting)</td>
             <td class="py-4 px-4">
-              <input type="text" value="${topicValue}" placeholder="Optional note..." onchange="updateTopic('${dateKey}', this.value)" class="w-full bg-transparent text-xs text-slate-500 focus:outline-none" />
+              <input type="text" value="${topicValue}" placeholder="Optional note..." onchange="updateTopic('${dateKey}', this.value)" class="w-full bg-transparent text-xs text-slate-500 focus:outline-none">
             </td>
             <td class="py-4 px-4 text-center">—</td>
             <td class="py-4 px-4 text-right no-print">
               <button onclick="toggleHoliday('${dateKey}')" class="text-xs text-slate-400 hover:text-slate-600">Mark Holiday</button>
+            </td>
+          `;
+        } else if (isBigGroup) {
+          // ──────────────────────────────────────────────────────
+          // WEEK 3 — BIG GROUP GRADUATED FELLOWSHIP
+          // ──────────────────────────────────────────────────────
+          tr.className = "bg-purple-50/40 hover:bg-purple-50 transition";
+          tr.innerHTML = `
+            <td class="py-4 px-4 font-bold text-slate-900">
+              ${formattedDate}
+              <span class="block text-xs font-medium text-purple-600">Week ${weekNum} • 6:30 PM</span>
+            </td>
+            <td class="py-4 px-4 text-center">
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-800">
+                <i class="fa-solid fa-graduation-cap"></i> Big Group
+              </span>
+            </td>
+            <td class="py-4 px-4">
+              <span class="inline-block px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-900 font-bold rounded-lg text-xs">
+                ${leader}
+              </span>
+            </td>
+            <td class="py-4 px-4 text-slate-700 font-semibold">${openPray}</td>
+            <td class="py-4 px-4 text-slate-700 font-semibold">${worship}</td>
+            <td class="py-4 px-4 text-slate-700 font-semibold">${closePray}</td>
+            <td class="py-4 px-4">
+              <input 
+                type="text" 
+                value="${topicValue}" 
+                placeholder="Big Group Fellowship Topic..." 
+                onchange="updateTopic('${dateKey}', this.value)" 
+                class="w-full px-2.5 py-1.5 bg-purple-50 border border-purple-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-purple-400 focus:outline-none transition"
+              />
+            </td>
+            <td class="py-4 px-4 text-center">
+              <button onclick="openBoardModal('${dateKey}', 'Week ${weekNum} — Big Group 🎓', '${formattedDate}', '${leader}', '${openPray}', '${worship}', '${closePray}', true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm ${hasNotesOrPhotos ? 'bg-purple-600 text-white shadow-purple-200' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}">
+                <i class="fa-solid ${hasNotesOrPhotos ? 'fa-clipboard-check' : 'fa-graduation-cap'}"></i>
+                <span>${hasNotesOrPhotos ? 'Board (Active)' : 'Open Board'}</span>
+              </button>
+            </td>
+            <td class="py-4 px-4 text-right no-print">
+              <button onclick="toggleHoliday('${dateKey}')" title="Skip if Public Holiday" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 hover:bg-rose-100 hover:text-rose-700 transition">
+                <i class="fa-solid fa-plane-slash mr-1"></i> Holiday
+              </button>
             </td>
           `;
         } else {
@@ -546,7 +564,7 @@
               />
             </td>
             <td class="py-4 px-4 text-center">
-              <button onclick="openBoardModal('${dateKey}', 'Week ${weekNum}', '${formattedDate}', '${leader}', '${openPray}', '${worship}', '${closePray}')" class="inline-flex items-center gap-1 px-3 py-1.5 bg-faith-50 text-faith-700 border border-faith-200 rounded-lg hover:bg-faith-100 text-xs font-bold transition">
+              <button onclick="openBoardModal('${dateKey}', 'Week ${weekNum}', '${formattedDate}', '${leader}', '${openPray}', '${worship}', '${closePray}', false)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm ${hasNotesOrPhotos ? 'bg-faith-600 text-white shadow-sky-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
                 <i class="fa-solid ${hasNotesOrPhotos ? 'fa-clipboard-check' : 'fa-clipboard'}"></i>
                 <span>${hasNotesOrPhotos ? 'Board (Active)' : 'Open Board'}</span>
               </button>
@@ -566,7 +584,7 @@
     // ==========================================
     // WEEKLY STUDY BOARD MODAL & PHOTO UPLOAD
     // ==========================================
-    function openBoardModal(dateKey, weekTag, formattedDate, leader, openPray, worship, closePray) {
+    function openBoardModal(dateKey, weekTag, formattedDate, leader, openPray, worship, closePray, isBigGroup) {
       document.getElementById('activeBoardDateKey').value = dateKey;
       document.getElementById('boardWeekTag').innerText = weekTag;
       document.getElementById('boardDateTitle').innerText = `${formattedDate} • 6:30 PM`;
@@ -574,6 +592,17 @@
       document.getElementById('boardOpenPrayName').innerText = openPray;
       document.getElementById('boardWorshipName').innerText = worship;
       document.getElementById('boardClosePrayName').innerText = closePray;
+
+      // Style modal header differently for Big Group
+      const header = document.getElementById('boardModalHeader');
+      const title = document.getElementById('boardModalTitle');
+      if (isBigGroup) {
+        header.className = "px-6 py-4 bg-gradient-to-r from-purple-700 to-purple-500 text-white flex justify-between items-center";
+        title.innerText = "🎓 Big Group Graduated Fellowship Board";
+      } else {
+        header.className = "px-6 py-4 bg-gradient-to-r from-faith-700 to-faith-600 text-white flex justify-between items-center";
+        title.innerText = "Fellowship Study Board";
+      }
 
       const item = customSchedules[dateKey] || {};
       document.getElementById('boardTopicInput').value = item.topic || '';
@@ -597,17 +626,16 @@
       gallery.innerHTML = '';
 
       if (activeBoardPhotos.length === 0) {
-        gallery.innerHTML = `<div class="col-span-full text-center py-8"><i class="fa-solid fa-images text-4xl text-slate-300 mb-2"></i><p class="text-sm text-slate-400 italic">No photos uploaded yet. Start building your photo gallery!</p></div>`;
+        gallery.innerHTML = `<span class="col-span-full text-center text-xs text-slate-400 py-3 italic">No photos uploaded yet. Attach sermon slides or meeting photos!</span>`;
         return;
       }
 
       activeBoardPhotos.forEach((imgSrc, index) => {
         const div = document.createElement('div');
-        div.className = "relative rounded-xl overflow-hidden aspect-square group border-2 border-slate-200 shadow-md hover:shadow-lg transition";
+        div.className = "relative rounded-xl overflow-hidden aspect-square group border border-slate-200 shadow-sm";
         div.innerHTML = `
           <img src="${imgSrc}" class="w-full h-full object-cover" />
-          <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/20 transition duration-200"></div>
-          <button onclick="removeBoardPhoto(${index})" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-900/80 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-rose-600">
+          <button onclick="removeBoardPhoto(${index})" class="absolute top-1 right-1 w-6 h-6 rounded-full bg-slate-900/80 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition" title="Delete Photo">
             <i class="fa-solid fa-xmark"></i>
           </button>
         `;
@@ -625,7 +653,7 @@
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement('canvas');
-          const maxDim = 1080;
+          const maxDim = 800;
           let width = img.width;
           let height = img.height;
 
@@ -737,18 +765,15 @@
     // MEMBER MANAGEMENT
     // ==========================================
     function renderMembersChipList() {
-      const container = document.getElementById('memberAvatarsContainer');
+      const container = document.getElementById('membersChipList');
       document.getElementById('memberCountBadge').innerText = members.length;
       container.innerHTML = '';
 
-      members.forEach((m, index) => {
-        const div = document.createElement('div');
-        div.className = "flex flex-col items-center gap-1.5";
-        div.innerHTML = `
-          <img src="${m.avatar}" alt="${m.name}" title="${m.name}" class="member-avatar" />
-          <span class="text-xs font-semibold text-slate-700 text-center">${m.name}</span>
-        `;
-        container.appendChild(div);
+      members.forEach(m => {
+        const chip = document.createElement('span');
+        chip.className = "inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold";
+        chip.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-faith-600"></span> ${m.name}`;
+        container.appendChild(chip);
       });
     }
 
@@ -758,16 +783,12 @@
 
       members.forEach((m, index) => {
         const li = document.createElement('li');
-        li.className = "flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm hover:bg-slate-100 transition";
+        li.className = "flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm";
         li.innerHTML = `
-          <div class="flex items-center gap-3">
-            <img src="${m.avatar}" alt="${m.name}" class="w-8 h-8 rounded-full" />
-            <div>
-              <div class="font-bold text-slate-800">${m.name}</div>
-              <span class="text-xs text-slate-400">Slot ${index + 1}</span>
-            </div>
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-full bg-faith-100 text-faith-700 flex items-center justify-center text-xs font-bold">${index + 1}</span>
+            <span class="font-bold text-slate-800">${m.name}</span>
           </div>
-          
           <button onclick="removeMember(${m.id})" class="text-slate-400 hover:text-rose-600 p-1 transition" title="Remove Member">
             <i class="fa-solid fa-trash-can text-sm"></i>
           </button> 
@@ -782,13 +803,11 @@
       const name = input.value.trim();
       if (!name) return;
 
-      const newMember = { name, sort_order: members.length + 1, avatar: generateAvatar(name, members.length) };
-
       if (supabaseClient) {
         const { data } = await supabaseClient.from('members').insert([{ name, sort_order: members.length + 1 }]).select();
-        if (data) members.push({ ...data[0], avatar: generateAvatar(data[0].name, members.length - 1) });
+        if (data) members.push(data[0]);
       } else {
-        members.push({ id: Date.now(), ...newMember });
+        members.push({ id: Date.now(), name });
       }
 
       input.value = '';
