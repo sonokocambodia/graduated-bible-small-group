@@ -323,11 +323,13 @@
     const SUPABASE_ANON_KEY = "sb_publishable__DauIC7vEqFuiQP0wgxifw_DjzcASSZ";
     // =========================================================================
 
-    const DEFAULT_MEMBERS = ["វិឆៃ", "ដាវីត", "ឡៃ", "ប៊ុនធឿន"];
+    const DEFAULT_MEMBERS = ["Vichhai", "David", "Lai", "Bunthouern"];
 
     // Regular fellowship leader rotation: Week 1 & Week 2 only.
     // Week 3 Big Group and rest/holiday weeks do NOT advance the rotation.
-    const LEADER_CYCLE = ["វិឆៃ", "ដាវីត", "ឡៃ", "ប៊ុនធឿន"];
+    // Members are loaded from the Supabase `members` table in `sort_order`.
+    // New members are added to the end of that order and automatically join
+    // the rotation.
     const ROTATION_START_YEAR = 2026;
     const ROTATION_START_MONTH = 0; // January 2026
     let supabaseClient = null;
@@ -423,8 +425,21 @@
       return `${y}-${m}-${day}`;
     }
 
+    // Get a member from the CURRENT SQL member rotation order.
+    // This replaces the old fixed LEADER_CYCLE so newly-added members
+    // automatically participate in Leader / Prayer / Worship rotation.
     function getCycleMember(index) {
-      return LEADER_CYCLE[((index % LEADER_CYCLE.length) + LEADER_CYCLE.length) % LEADER_CYCLE.length];
+      if (!members || members.length === 0) return "—";
+
+      const rotationMembers = [...members].sort((a, b) => {
+        const aOrder = Number.isFinite(Number(a.sort_order)) ? Number(a.sort_order) : Number.MAX_SAFE_INTEGER;
+        const bOrder = Number.isFinite(Number(b.sort_order)) ? Number(b.sort_order) : Number.MAX_SAFE_INTEGER;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return Number(a.id || 0) - Number(b.id || 0);
+      });
+
+      const safeIndex = ((index % rotationMembers.length) + rotationMembers.length) % rotationMembers.length;
+      return rotationMembers[safeIndex].name;
     }
 
     // Returns the zero-based position of a regular meeting in the continuous
@@ -902,11 +917,47 @@
       const name = input.value.trim();
       if (!name) return;
 
+      // Prevent duplicate member names.
+      const duplicate = members.some(m =>
+        String(m.name || '').trim().toLowerCase() === name.toLowerCase()
+      );
+      if (duplicate) {
+        alert(`Member "${name}" already exists.`);
+        input.focus();
+        return;
+      }
+
+      // Always add the new member AFTER the existing SQL rotation order.
+      const maxSortOrder = members.reduce((max, m) => {
+        const order = Number(m.sort_order);
+        return Number.isFinite(order) ? Math.max(max, order) : max;
+      }, 0);
+      const nextSortOrder = maxSortOrder + 1;
+
       if (supabaseClient) {
-        const { data } = await supabaseClient.from('members').insert([{ name, sort_order: members.length + 1 }]).select();
-        if (data) members.push(data[0]);
+        const { data, error } = await supabaseClient
+          .from('members')
+          .insert([{ name, sort_order: nextSortOrder }])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Add member error:', error);
+          alert(`Could not add member: ${error.message}`);
+          return;
+        }
+
+        // SQL is the source of truth. The inserted row now contains the
+        // member's persistent sort_order, so all connected users get the
+        // same rotation order through the realtime subscription.
+        members.push(data);
+        members.sort((a, b) => {
+          const ao = Number(a.sort_order) || 0;
+          const bo = Number(b.sort_order) || 0;
+          return ao - bo || Number(a.id || 0) - Number(b.id || 0);
+        });
       } else {
-        members.push({ id: Date.now(), name });
+        members.push({ id: Date.now(), name, sort_order: nextSortOrder });
       }
 
       input.value = '';
