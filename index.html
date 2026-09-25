@@ -323,7 +323,13 @@
     const SUPABASE_ANON_KEY = "sb_publishable__DauIC7vEqFuiQP0wgxifw_DjzcASSZ";
     // =========================================================================
 
-    const DEFAULT_MEMBERS = ["Vichhai", "Lai", "David", "Bunthouern", "Vanny"];
+    const DEFAULT_MEMBERS = ["Vichhai", "David", "Lai", "Bunthouern"];
+
+    // Regular fellowship leader rotation: Week 1 & Week 2 only.
+    // Week 3 Big Group and rest/holiday weeks do NOT advance the rotation.
+    const LEADER_CYCLE = ["Vichhai", "David", "Lai", "Bunthouern"];
+    const ROTATION_START_YEAR = 2026;
+    const ROTATION_START_MONTH = 0; // January 2026
     let supabaseClient = null;
     let members = [];
     let customSchedules = {};
@@ -417,6 +423,47 @@
       return `${y}-${m}-${day}`;
     }
 
+    function getCycleMember(index) {
+      return LEADER_CYCLE[((index % LEADER_CYCLE.length) + LEADER_CYCLE.length) % LEADER_CYCLE.length];
+    }
+
+    // Returns the zero-based position of a regular meeting in the continuous
+    // rotation. Only Week 1 and Week 2 count. Week 3 Big Group, rest weeks,
+    // and public-holiday skips do not consume a leader.
+    function getRegularMeetingIndex(year, monthIndex, weekNum) {
+      let count = 0;
+
+      // Count regular meetings from the rotation start through previous months.
+      for (let y = ROTATION_START_YEAR; y <= year; y++) {
+        const firstMonth = (y === ROTATION_START_YEAR) ? ROTATION_START_MONTH : 0;
+        const lastMonth = (y === year) ? monthIndex - 1 : 11;
+
+        if (lastMonth < firstMonth) continue;
+
+        for (let m = firstMonth; m <= lastMonth; m++) {
+          const monthFridays = getFridaysInMonth(y, m);
+
+          monthFridays.forEach((date, idx) => {
+            const w = idx + 1;
+            if (w !== 1 && w !== 2) return;
+
+            const key = formatDateKey(date);
+            const data = customSchedules[key] || {};
+            if (!data.is_holiday) count++;
+          });
+        }
+      }
+
+      // Count earlier regular meetings in the current month.
+      const currentFridays = getFridaysInMonth(year, monthIndex);
+      for (let i = 0; i < Math.min(weekNum - 1, 2); i++) {
+        const data = customSchedules[formatDateKey(currentFridays[i])] || {};
+        if (!data.is_holiday) count++;
+      }
+
+      return count;
+    }
+
     function generateSchedule() {
       const picker = document.getElementById('monthPicker');
       let [yearStr, monthStr] = picker.value.split('-');
@@ -431,9 +478,6 @@
       const tbody = document.getElementById('scheduleTableBody');
       tbody.innerHTML = '';
 
-      const startBase = (year * 12 + monthIndex) * 3;
-      const mLen = members.length;
-
       fridays.forEach((friDate, idx) => {
         const weekNum = idx + 1;
         const dateKey = formatDateKey(friDate);
@@ -445,11 +489,17 @@
         const topicValue = itemData.topic || "";
         const hasNotesOrPhotos = (itemData.notes || itemData.verse || (itemData.images && itemData.images.length > 0));
 
-        const meetingCycleIndex = (startBase + idx);
-        const leader = mLen ? members[(meetingCycleIndex + 0) % mLen].name : "—";
-        const openPray = mLen ? members[(meetingCycleIndex + 1) % mLen].name : "—";
-        const worship = mLen ? members[(meetingCycleIndex + 2) % mLen].name : "—";
-        const closePray = mLen ? members[(meetingCycleIndex + 3) % mLen].name : "—";
+        // Only regular Week 1 & Week 2 meetings advance the 4-leader rotation.
+        // Week 3 Big Group, rest weeks, and holidays are skipped.
+        const isRegularMeeting = !isRestWeek && !isBigGroup && !isHoliday && (weekNum === 1 || weekNum === 2);
+        const meetingCycleIndex = isRegularMeeting
+          ? getRegularMeetingIndex(year, monthIndex, weekNum)
+          : -1;
+
+        const leader = isRegularMeeting ? getCycleMember(meetingCycleIndex) : "—";
+        const openPray = isRegularMeeting ? getCycleMember(meetingCycleIndex + 1) : "—";
+        const worship = isRegularMeeting ? getCycleMember(meetingCycleIndex + 2) : "—";
+        const closePray = isRegularMeeting ? getCycleMember(meetingCycleIndex + 3) : "—";
 
         const formattedDate = friDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         const tr = document.createElement('tr');
