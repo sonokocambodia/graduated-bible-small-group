@@ -1,0 +1,4016 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Bible Study Fellowship | Interactive Weekly Boards</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- FontAwesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  >
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif']
+          },
+          colors: {
+            faith: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+
+      body {
+        background: white !important;
+        color: black !important;
+      }
+
+      .print-shadow-none {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+
+      input,
+      textarea {
+        border: none !important;
+        background: transparent !important;
+      }
+    }
+
+    .dragging {
+      opacity: 0.5;
+    }
+
+    .member-row {
+      transition: all 0.15s ease;
+    }
+
+    .member-row:hover {
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- ========================================================= -->
+  <!-- TOP APP BAR -->
+  <!-- ========================================================= -->
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print shadow-sm">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5
+                flex flex-wrap justify-between items-center gap-4">
+
+      <!-- Brand -->
+      <div class="flex items-center gap-3">
+
+        <div class="w-10 h-10 rounded-xl bg-faith-600
+                    flex items-center justify-center text-white text-lg
+                    shadow-md shadow-sky-200">
+
+          <i class="fa-solid fa-book-bible"></i>
+
+        </div>
+
+        <div>
+
+          <div class="flex items-center gap-2">
+
+            <h1 class="text-lg font-bold text-slate-900 leading-none">
+              Bible Fellowship Hub
+            </h1>
+
+            <span
+              id="dbStatusBadge"
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5
+                     rounded-full text-[11px] font-bold
+                     bg-slate-100 text-slate-600"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+              Connecting...
+            </span>
+
+          </div>
+
+          <p class="text-xs text-slate-500 font-medium mt-1">
+            Realtime Fellowship Boards & Roster
+          </p>
+
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+
+        <button
+          onclick="window.print()"
+          class="inline-flex items-center gap-2 px-3 py-2
+                 text-xs sm:text-sm font-semibold text-slate-700
+                 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+        >
+          <i class="fa-solid fa-print text-slate-500"></i>
+          <span class="hidden sm:inline">Print / PDF</span>
+        </button>
+
+        <button
+          onclick="openMemberModal()"
+          class="inline-flex items-center gap-2 px-3.5 py-2
+                 text-xs sm:text-sm font-semibold text-white
+                 bg-faith-600 hover:bg-faith-700 rounded-xl
+                 shadow-sm shadow-sky-200 transition"
+        >
+          <i class="fa-solid fa-users"></i>
+          <span>
+            Members (<span id="memberCountBadge">0</span>)
+          </span>
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+
+
+  <!-- ========================================================= -->
+  <!-- MAIN -->
+  <!-- ========================================================= -->
+
+  <main
+    class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8
+           py-6 space-y-6"
+  >
+
+    <!-- Rules -->
+    <div
+      class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm
+             flex flex-col lg:flex-row lg:items-center
+             justify-between gap-6"
+    >
+
+      <div class="space-y-2">
+
+        <div class="flex items-center gap-2">
+
+          <span
+            class="px-2.5 py-0.5 rounded-full text-xs font-bold
+                   bg-sky-100 text-faith-700 uppercase tracking-wider"
+          >
+            Fellowship Rules
+          </span>
+
+          <span class="text-xs text-slate-400 font-medium">
+            • 6:30 PM Every Friday
+          </span>
+
+        </div>
+
+        <h2 class="text-xl font-extrabold text-slate-900">
+          Weekly Schedule & Interactive Boards
+        </h2>
+
+        <p class="text-sm text-slate-600 max-w-xl">
+          Meets on <strong>Weeks 1 & 2</strong>.
+          <strong>Week 3</strong> is the 🎓
+          <strong>Big Group Graduated Fellowship</strong>.
+          The <strong>last week(s) are Rest Weeks</strong>.
+          Click <strong>"Open Board"</strong> to write notes,
+          Bible verses, and upload photos.
+        </p>
+
+      </div>
+
+      <!-- Month -->
+      <div
+        class="flex items-center gap-3 bg-slate-50 p-2.5
+               rounded-xl border border-slate-200 no-print"
+      >
+
+        <label
+          for="monthPicker"
+          class="text-xs font-bold text-slate-500
+                 uppercase ml-1"
+        >
+          Select Month:
+        </label>
+
+        <input
+          type="month"
+          id="monthPicker"
+          onchange="generateSchedule()"
+          class="bg-white border border-slate-300
+                 text-slate-800 text-sm font-semibold
+                 rounded-lg px-3 py-1.5
+                 focus:ring-2 focus:ring-faith-500
+                 focus:outline-none"
+        />
+
+      </div>
+
+    </div>
+
+
+    <!-- Members -->
+    <div
+      class="bg-white px-6 py-4 rounded-2xl
+             border border-slate-200 shadow-sm
+             flex items-center justify-between
+             flex-wrap gap-3"
+    >
+
+      <div class="flex items-center gap-2">
+
+        <span class="text-xs font-bold text-slate-400 uppercase">
+          Active Rotation:
+        </span>
+
+        <div
+          id="membersChipList"
+          class="flex flex-wrap gap-1.5"
+        ></div>
+
+      </div>
+
+      <span class="text-xs text-slate-400 italic">
+        Leader • Open Prayer • Worship • Close Prayer
+      </span>
+
+    </div>
+
+
+    <!-- Legend -->
+    <div
+      class="bg-white px-6 py-3 rounded-2xl
+             border border-slate-200 shadow-sm
+             flex flex-wrap items-center gap-4
+             text-xs font-semibold"
+    >
+
+      <span
+        class="text-slate-400 uppercase font-bold tracking-wider"
+      >
+        Legend:
+      </span>
+
+      <span
+        class="inline-flex items-center gap-1.5 px-2.5 py-1
+               rounded-full bg-emerald-100 text-emerald-800"
+      >
+        <i class="fa-solid fa-check"></i>
+        Regular Meeting
+      </span>
+
+      <span
+        class="inline-flex items-center gap-1.5 px-2.5 py-1
+               rounded-full bg-purple-100 text-purple-800"
+      >
+        <i class="fa-solid fa-graduation-cap"></i>
+        Big Group
+      </span>
+
+      <span
+        class="inline-flex items-center gap-1.5 px-2.5 py-1
+               rounded-full bg-amber-100 text-amber-800"
+      >
+        <i class="fa-solid fa-bed"></i>
+        Rest Week
+      </span>
+
+      <span
+        class="inline-flex items-center gap-1.5 px-2.5 py-1
+               rounded-full bg-rose-100 text-rose-700"
+      >
+        <i class="fa-solid fa-umbrella-beach"></i>
+        Public Holiday
+      </span>
+
+    </div>
+
+
+    <!-- Schedule -->
+    <div
+      class="bg-white rounded-2xl border border-slate-200
+             shadow-sm overflow-hidden print-shadow-none"
+    >
+
+      <div
+        class="p-5 border-b border-slate-100
+               flex justify-between items-center
+               bg-slate-50/50"
+      >
+
+        <div>
+
+          <h3
+            id="scheduleMonthTitle"
+            class="text-lg font-bold text-slate-900"
+          >
+            Fellowship Schedule
+          </h3>
+
+          <p class="text-xs text-slate-500 mt-0.5">
+            Edit topics or open the board for detailed study notes
+            and photos.
+          </p>
+
+        </div>
+
+        <div
+          id="savingIndicator"
+          class="hidden text-xs font-bold
+                 text-faith-600 items-center gap-1.5"
+        >
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Saving...
+        </div>
+
+      </div>
+
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full text-left border-collapse text-sm">
+
+          <thead>
+
+            <tr
+              class="bg-slate-100/70 border-b border-slate-200
+                     text-xs font-bold text-slate-600
+                     uppercase tracking-wider"
+            >
+
+              <th class="py-3.5 px-4">
+                Date & Time
+              </th>
+
+              <th class="py-3.5 px-4 text-center">
+                Status
+              </th>
+
+              <th class="py-3.5 px-4">
+                <i class="fa-solid fa-crown text-amber-500 mr-1.5"></i>
+                Leader
+              </th>
+
+              <th class="py-3.5 px-4">
+                <i class="fa-solid fa-hands-praying text-sky-500 mr-1.5"></i>
+                Open Prayer
+              </th>
+
+              <th class="py-3.5 px-4">
+                <i class="fa-solid fa-guitar text-emerald-500 mr-1.5"></i>
+                Worship
+              </th>
+
+              <th class="py-3.5 px-4">
+                <i class="fa-solid fa-person-praying text-purple-500 mr-1.5"></i>
+                Close Prayer
+              </th>
+
+              <th class="py-3.5 px-4 w-60">
+                <i class="fa-solid fa-bookmark text-rose-500 mr-1.5"></i>
+                Bible Topic
+              </th>
+
+              <th class="py-3.5 px-4 text-center">
+                Study Board
+              </th>
+
+              <th class="py-3.5 px-4 text-right no-print">
+                Holiday
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody
+            id="scheduleTableBody"
+            class="divide-y divide-slate-100 font-medium"
+          ></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- ========================================================= -->
+  <!-- STUDY BOARD MODAL -->
+  <!-- ========================================================= -->
+
+  <div
+    id="boardModal"
+    class="fixed inset-0 z-50 bg-slate-900/50
+           backdrop-blur-sm hidden items-center
+           justify-center p-4 overflow-y-auto no-print"
+  >
+
+    <div
+      class="bg-white w-full max-w-2xl rounded-3xl
+             shadow-2xl border border-slate-100
+             overflow-hidden my-8"
+    >
+
+      <!-- Header -->
+      <div
+        id="boardModalHeader"
+        class="px-6 py-4 bg-gradient-to-r
+               from-faith-700 to-faith-600
+               text-white flex justify-between items-center"
+      >
+
+        <div>
+
+          <div class="flex items-center gap-2">
+
+            <span
+              id="boardWeekTag"
+              class="px-2 py-0.5 rounded-md
+                     bg-white/20 text-[11px]
+                     font-bold tracking-wider uppercase"
+            >
+              Week 1
+            </span>
+
+            <span
+              id="boardDateTitle"
+              class="text-xs text-sky-100 font-medium"
+            >
+              Friday • 6:30 PM
+            </span>
+
+          </div>
+
+          <h3
+            id="boardModalTitle"
+            class="text-lg font-bold mt-0.5"
+          >
+            Fellowship Study Board
+          </h3>
+
+        </div>
+
+        <button
+          onclick="closeBoardModal()"
+          class="text-white/70 hover:text-white
+                 transition p-1"
+        >
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+
+      </div>
+
+
+      <!-- Assigned Roles -->
+      <div
+        class="px-6 py-3 bg-faith-50
+               border-b border-sky-100
+               flex flex-wrap items-center
+               gap-x-4 gap-y-1 text-xs text-slate-700"
+      >
+
+        <div>
+          <span class="font-bold text-amber-700">
+            Leader:
+          </span>
+          <span
+            id="boardLeaderName"
+            class="font-semibold"
+          >—</span>
+        </div>
+
+        <div>
+          <span class="font-bold text-sky-700">
+            Open Prayer:
+          </span>
+          <span
+            id="boardOpenPrayName"
+            class="font-semibold"
+          >—</span>
+        </div>
+
+        <div>
+          <span class="font-bold text-emerald-700">
+            Worship:
+          </span>
+          <span
+            id="boardWorshipName"
+            class="font-semibold"
+          >—</span>
+        </div>
+
+        <div>
+          <span class="font-bold text-purple-700">
+            Close Prayer:
+          </span>
+          <span
+            id="boardClosePrayName"
+            class="font-semibold"
+          >—</span>
+        </div>
+
+      </div>
+
+
+      <!-- Body -->
+      <div
+        class="p-6 space-y-5 max-h-[70vh]
+               overflow-y-auto"
+      >
+
+        <input
+          type="hidden"
+          id="activeBoardDateKey"
+        >
+
+
+        <!-- Topic -->
+        <div class="space-y-3">
+
+          <div>
+
+            <label
+              class="block text-xs font-bold
+                     text-slate-700 uppercase mb-1
+                     flex items-center gap-1.5"
+            >
+              <i class="fa-solid fa-bookmark text-rose-500"></i>
+              Topic / Title
+            </label>
+
+            <input
+              type="text"
+              id="boardTopicInput"
+              placeholder="e.g. Walking in Faith, Not by Sight"
+              class="w-full px-3.5 py-2 text-sm
+                     border border-slate-200 rounded-xl
+                     focus:ring-2 focus:ring-faith-500
+                     focus:outline-none font-medium"
+            />
+
+          </div>
+
+
+          <!-- Verse -->
+          <div>
+
+            <label
+              class="block text-xs font-bold
+                     text-slate-700 uppercase mb-1
+                     flex items-center gap-1.5"
+            >
+              <i class="fa-solid fa-quote-left text-faith-600"></i>
+              Key Bible Verse & Passage
+            </label>
+
+            <textarea
+              id="boardVerseInput"
+              rows="2"
+              placeholder="e.g. Trust in the LORD with all your heart... - Proverbs 3:5-6"
+              class="w-full px-3.5 py-2 text-sm
+                     border border-slate-200 rounded-xl
+                     focus:ring-2 focus:ring-faith-500
+                     focus:outline-none font-medium"
+            ></textarea>
+
+          </div>
+
+        </div>
+
+
+        <!-- Notes -->
+        <div>
+
+          <label
+            class="block text-xs font-bold
+                   text-slate-700 uppercase mb-1
+                   flex items-center gap-1.5"
+          >
+            <i class="fa-solid fa-pen-to-square text-amber-500"></i>
+            Study Notes & Prayer Requests
+          </label>
+
+          <textarea
+            id="boardNotesInput"
+            rows="4"
+            placeholder="Type discussion questions, key takeaways, or prayer requests..."
+            class="w-full px-3 py-2.5 text-sm
+                   border border-slate-200 rounded-xl
+                   focus:ring-2 focus:ring-faith-500
+                   focus:outline-none"
+          ></textarea>
+
+        </div>
+
+
+        <!-- Photos -->
+        <div>
+
+          <div class="flex justify-between
+                      items-center mb-2">
+
+            <label
+              class="text-xs font-bold text-slate-700
+                     uppercase flex items-center gap-1.5"
+            >
+              <i class="fa-solid fa-images text-emerald-500"></i>
+              Photos & Sermon Slides
+            </label>
+
+            <label
+              class="cursor-pointer inline-flex
+                     items-center gap-1.5 px-3 py-1
+                     bg-sky-50 text-faith-700
+                     border border-sky-200
+                     rounded-lg text-xs font-bold
+                     hover:bg-sky-100 transition"
+            >
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              Upload Photo
+
+              <input
+                type="file"
+                id="boardImageUploader"
+                accept="image/*"
+                class="hidden"
+                onchange="handleImageUpload(event)"
+              >
+
+            </label>
+
+          </div>
+
+
+          <div
+            id="boardPhotoGallery"
+            class="grid grid-cols-3 sm:grid-cols-4
+                   gap-3 min-h-[80px] p-3
+                   bg-slate-50
+                   border border-dashed
+                   border-slate-200 rounded-2xl
+                   items-center"
+          ></div>
+
+        </div>
+
+      </div>
+
+
+      <!-- Footer -->
+      <div
+        class="px-6 py-3.5 bg-slate-50
+               border-t border-slate-100
+               flex justify-between items-center"
+      >
+
+        <span class="text-xs text-slate-400 italic">
+          Auto-syncs changes to Supabase cloud.
+        </span>
+
+        <button
+          onclick="saveAndCloseBoard()"
+          class="px-5 py-2 text-sm font-semibold
+                 text-white bg-faith-600
+                 hover:bg-faith-700 rounded-xl
+                 shadow-sm transition"
+        >
+          Save & Close
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- MEMBER MODAL -->
+  <!-- ========================================================= -->
+
+  <div
+    id="memberModal"
+    class="fixed inset-0 z-50 bg-slate-900/40
+           backdrop-blur-sm hidden items-center
+           justify-center p-4 no-print"
+  >
+
+    <div
+      class="bg-white w-full max-w-md
+             rounded-2xl shadow-2xl
+             border border-slate-100 overflow-hidden"
+    >
+
+      <!-- Header -->
+      <div
+        class="px-6 py-4 border-b
+               border-slate-100
+               flex justify-between items-center"
+      >
+
+        <h3
+          class="text-base font-bold text-slate-900
+                 flex items-center gap-2"
+        >
+          <i class="fa-solid fa-user-gear text-faith-600"></i>
+          Manage Group Members
+        </h3>
+
+        <button
+          onclick="closeMemberModal()"
+          class="text-slate-400
+                 hover:text-slate-600 transition"
+        >
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+      </div>
+
+
+      <!-- Body -->
+      <div class="p-6 space-y-5">
+
+        <!-- Add -->
+        <form
+          onsubmit="addMember(event)"
+          class="flex gap-2"
+        >
+
+          <input
+            type="text"
+            id="newMemberName"
+            placeholder="Add new member name..."
+            required
+            maxlength="100"
+            class="flex-1 px-3.5 py-2 text-sm
+                   border border-slate-200 rounded-xl
+                   focus:ring-2 focus:ring-faith-500
+                   focus:outline-none"
+          >
+
+          <button
+            type="submit"
+            class="px-4 py-2 text-sm font-semibold
+                   text-white bg-faith-600
+                   hover:bg-faith-700 rounded-xl
+                   transition shadow-sm"
+          >
+            Add
+          </button>
+
+        </form>
+
+
+        <!-- Info -->
+        <div
+          class="bg-sky-50 border border-sky-100
+                 rounded-xl p-3 text-xs text-sky-800"
+        >
+          <div class="font-bold mb-1">
+            <i class="fa-solid fa-circle-info mr-1"></i>
+            Rotation Order
+          </div>
+
+          Use the ↑ and ↓ buttons to change the rotation.
+          The order is saved directly to Supabase.
+          Week 1 and Week 2 automatically use this order.
+        </div>
+
+
+        <!-- Members -->
+        <div>
+
+          <label
+            class="block text-xs font-bold
+                   text-slate-400 uppercase mb-2"
+          >
+            Cycle Rotation Order
+          </label>
+
+          <ul
+            id="modalMemberList"
+            class="space-y-2 max-h-72
+                   overflow-y-auto pr-1"
+          ></ul>
+
+        </div>
+
+      </div>
+
+
+      <!-- Footer -->
+      <div
+        class="px-6 py-3 bg-slate-50
+               border-t border-slate-100
+               flex justify-end"
+      >
+
+        <button
+          onclick="closeMemberModal()"
+          class="px-4 py-1.5 text-sm
+                 font-semibold text-slate-700
+                 bg-white border border-slate-200
+                 rounded-lg hover:bg-slate-100
+                 transition"
+        >
+          Done
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- JAVASCRIPT -->
+  <!-- ========================================================= -->
+
+  <script>
+
+    // ==========================================================
+    // SUPABASE CONFIGURATION
+    // ==========================================================
+
+    const SUPABASE_URL =
+      "https://rwduotornfpbrdroxjne.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+      "sb_publishable__DauIC7vEqFuiQP0wgxifw_DjzcASSZ";
+
+
+    // ==========================================================
+    // DEFAULT MEMBERS
+    // Used only when Supabase members table is empty.
+    // ==========================================================
+
+    const DEFAULT_MEMBERS = [
+      "Vichhai",
+      "David",
+      "Lai",
+      "Bunthouern"
+    ];
+
+
+    // ==========================================================
+    // ROTATION START
+    // ==========================================================
+
+    const ROTATION_START_YEAR = 2026;
+    const ROTATION_START_MONTH = 0; // January = 0
+
+
+    // ==========================================================
+    // GLOBAL STATE
+    // ==========================================================
+
+    let supabaseClient = null;
+
+    let members = [];
+
+    let customSchedules = {};
+
+    let activeBoardPhotos = [];
+
+
+    // ==========================================================
+    // SECURITY / HTML ESCAPE
+    // ==========================================================
+
+    function escapeHtml(value) {
+
+      if (value === null || value === undefined) {
+        return "";
+      }
+
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+
+    // ==========================================================
+    // DATABASE STATUS
+    // ==========================================================
+
+    function setDatabaseStatus(type, textValue) {
+
+      const badge =
+        document.getElementById("dbStatusBadge");
+
+      if (!badge) return;
+
+
+      if (type === "connected") {
+
+        badge.className =
+          "inline-flex items-center gap-1.5 px-2.5 py-0.5 " +
+          "rounded-full text-[11px] font-bold " +
+          "bg-emerald-100 text-emerald-800";
+
+        badge.innerHTML =
+          '<span class="w-1.5 h-1.5 rounded-full ' +
+          'bg-emerald-500"></span> ' +
+          escapeHtml(textValue || "Live Cloud Sync");
+
+      }
+
+      else if (type === "local") {
+
+        badge.className =
+          "inline-flex items-center gap-1.5 px-2.5 py-0.5 " +
+          "rounded-full text-[11px] font-bold " +
+          "bg-amber-100 text-amber-800";
+
+        badge.innerHTML =
+          '<span class="w-1.5 h-1.5 rounded-full ' +
+          'bg-amber-500"></span> ' +
+          escapeHtml(textValue || "Local Mode");
+
+      }
+
+      else if (type === "error") {
+
+        badge.className =
+          "inline-flex items-center gap-1.5 px-2.5 py-0.5 " +
+          "rounded-full text-[11px] font-bold " +
+          "bg-rose-100 text-rose-800";
+
+        badge.innerHTML =
+          '<span class="w-1.5 h-1.5 rounded-full ' +
+          'bg-rose-500"></span> ' +
+          escapeHtml(textValue || "Database Error");
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // SUPABASE CONNECTION
+    // ==========================================================
+
+    async function autoConnectSupabase() {
+
+      try {
+
+        if (
+          !SUPABASE_URL ||
+          !SUPABASE_ANON_KEY ||
+          SUPABASE_URL.includes("your-project")
+        ) {
+
+          setDatabaseStatus(
+            "local",
+            "Local Mode"
+          );
+
+          members =
+            DEFAULT_MEMBERS.map((name, index) => ({
+              id: index + 1,
+              name: name,
+              sort_order: index + 1
+            }));
+
+          renderMembersChipList();
+          generateSchedule();
+
+          return;
+        }
+
+
+        supabaseClient =
+          supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+          );
+
+
+        await fetchAndAutoSeedMembers();
+
+        await fetchSchedules();
+
+        setupRealtimeSubscriptions();
+
+        setDatabaseStatus(
+          "connected",
+          "Live Cloud Sync"
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Supabase connection error:",
+          error
+        );
+
+        setDatabaseStatus(
+          "error",
+          "Error Connecting"
+        );
+
+        /*
+         * Fall back to local members so the page
+         * remains usable.
+         */
+
+        members =
+          DEFAULT_MEMBERS.map((name, index) => ({
+            id: index + 1,
+            name: name,
+            sort_order: index + 1
+          }));
+
+        renderMembersChipList();
+        generateSchedule();
+
+        showError(
+          "Supabase connection failed. " +
+          "Please check your Supabase tables and policies."
+        );
+      }
+    }
+
+
+    // ==========================================================
+    // FETCH MEMBERS
+    // ==========================================================
+
+    async function fetchMembers() {
+
+      if (!supabaseClient) return;
+
+
+      const { data, error } =
+        await supabaseClient
+          .from("members")
+          .select("*")
+          .order("sort_order", {
+            ascending: true
+          })
+          .order("id", {
+            ascending: true
+          });
+
+
+      if (error) {
+
+        console.error(
+          "Fetch members error:",
+          error
+        );
+
+        throw error;
+      }
+
+
+      members = data || [];
+
+
+      renderMembersChipList();
+
+      renderModalMembers();
+
+      generateSchedule();
+    }
+
+
+    // ==========================================================
+    // AUTO SEED MEMBERS
+    // ==========================================================
+
+    async function fetchAndAutoSeedMembers() {
+
+      if (!supabaseClient) return;
+
+
+      const { data, error } =
+        await supabaseClient
+          .from("members")
+          .select("*")
+          .order("sort_order", {
+            ascending: true
+          })
+          .order("id", {
+            ascending: true
+          });
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      if (!data || data.length === 0) {
+
+        const seedPayload =
+          DEFAULT_MEMBERS.map(
+            (name, index) => ({
+              name: name,
+              sort_order: index + 1
+            })
+          );
+
+
+        const { data: seeded, error: seedError } =
+          await supabaseClient
+            .from("members")
+            .insert(seedPayload)
+            .select();
+
+
+        if (seedError) {
+          throw seedError;
+        }
+
+
+        members = seeded || [];
+
+      }
+
+      else {
+
+        members = data;
+
+      }
+
+
+      renderMembersChipList();
+
+      renderModalMembers();
+
+      generateSchedule();
+    }
+
+
+    // ==========================================================
+    // FETCH SCHEDULES
+    // ==========================================================
+
+    async function fetchSchedules() {
+
+      if (!supabaseClient) return;
+
+
+      const { data, error } =
+        await supabaseClient
+          .from("schedules")
+          .select("*");
+
+
+      if (error) {
+
+        console.error(
+          "Fetch schedules error:",
+          error
+        );
+
+        throw error;
+      }
+
+
+      customSchedules = {};
+
+
+      (data || []).forEach(item => {
+
+        customSchedules[item.date_key] =
+          item;
+
+      });
+
+
+      generateSchedule();
+    }
+
+
+    // ==========================================================
+    // REALTIME
+    // ==========================================================
+
+    function setupRealtimeSubscriptions() {
+
+      if (!supabaseClient) return;
+
+
+      supabaseClient
+        .channel("bible-realtime-channel")
+
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "members"
+          },
+          async () => {
+
+            try {
+
+              await fetchMembers();
+
+            }
+
+            catch (error) {
+
+              console.error(
+                "Realtime members error:",
+                error
+              );
+
+            }
+
+          }
+        )
+
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "schedules"
+          },
+          async () => {
+
+            try {
+
+              await fetchSchedules();
+
+            }
+
+            catch (error) {
+
+              console.error(
+                "Realtime schedules error:",
+                error
+              );
+
+            }
+
+          }
+        )
+
+        .subscribe(status => {
+
+          console.log(
+            "Realtime status:",
+            status
+          );
+
+        });
+    }
+
+
+    // ==========================================================
+    // FRIDAYS
+    // ==========================================================
+
+    function getFridaysInMonth(
+      year,
+      monthIndex
+    ) {
+
+      const fridays = [];
+
+      const date =
+        new Date(
+          year,
+          monthIndex,
+          1
+        );
+
+
+      while (
+        date.getMonth() === monthIndex
+      ) {
+
+        if (date.getDay() === 5) {
+
+          fridays.push(
+            new Date(date)
+          );
+
+        }
+
+        date.setDate(
+          date.getDate() + 1
+        );
+      }
+
+
+      return fridays;
+    }
+
+
+    // ==========================================================
+    // DATE KEY
+    // ==========================================================
+
+    function formatDateKey(date) {
+
+      const y =
+        date.getFullYear();
+
+      const m =
+        String(
+          date.getMonth() + 1
+        ).padStart(2, "0");
+
+      const d =
+        String(
+          date.getDate()
+        ).padStart(2, "0");
+
+
+      return `${y}-${m}-${d}`;
+    }
+
+
+    // ==========================================================
+    // SUPABASE MEMBER ROTATION
+    //
+    // IMPORTANT:
+    // members[] is already sorted by sort_order.
+    //
+    // index 0 = first member
+    // index 1 = second member
+    // etc.
+    // ==========================================================
+
+    function getCycleMember(index) {
+
+      if (
+        !members ||
+        members.length === 0
+      ) {
+        return "—";
+      }
+
+
+      const safeIndex =
+        (
+          index % members.length +
+          members.length
+        ) % members.length;
+
+
+      return (
+        members[safeIndex]?.name ||
+        "—"
+      );
+    }
+
+
+    // ==========================================================
+    // COUNT REGULAR MEETINGS
+    //
+    // Only Week 1 & Week 2 count.
+    //
+    // Week 3 = Big Group
+    // Last week = Rest
+    // Holiday = skipped
+    // ==========================================================
+
+    function getRegularMeetingIndex(
+      year,
+      monthIndex,
+      weekNum
+    ) {
+
+      let count = 0;
+
+
+      if (
+        !members ||
+        members.length === 0
+      ) {
+        return 0;
+      }
+
+
+      /*
+       * If viewing before rotation start,
+       * use index 0.
+       */
+
+      if (
+        year < ROTATION_START_YEAR ||
+        (
+          year === ROTATION_START_YEAR &&
+          monthIndex < ROTATION_START_MONTH
+        )
+      ) {
+        return 0;
+      }
+
+
+      // Previous months
+      for (
+        let y = ROTATION_START_YEAR;
+        y <= year;
+        y++
+      ) {
+
+        const firstMonth =
+          y === ROTATION_START_YEAR
+            ? ROTATION_START_MONTH
+            : 0;
+
+
+        const lastMonth =
+          y === year
+            ? monthIndex - 1
+            : 11;
+
+
+        if (
+          lastMonth < firstMonth
+        ) {
+          continue;
+        }
+
+
+        for (
+          let m = firstMonth;
+          m <= lastMonth;
+          m++
+        ) {
+
+          const fridays =
+            getFridaysInMonth(
+              y,
+              m
+            );
+
+
+          fridays.forEach(
+            (date, idx) => {
+
+              const w =
+                idx + 1;
+
+
+              if (
+                w !== 1 &&
+                w !== 2
+              ) {
+                return;
+              }
+
+
+              const key =
+                formatDateKey(date);
+
+
+              const data =
+                customSchedules[key] ||
+                {};
+
+
+              if (
+                !data.is_holiday
+              ) {
+
+                count++;
+
+              }
+
+            }
+          );
+
+        }
+      }
+
+
+      // Earlier weeks in current month
+
+      const currentFridays =
+        getFridaysInMonth(
+          year,
+          monthIndex
+        );
+
+
+      for (
+        let i = 0;
+        i < Math.min(
+          weekNum - 1,
+          2
+        );
+        i++
+      ) {
+
+        const date =
+          currentFridays[i];
+
+
+        if (!date) continue;
+
+
+        const data =
+          customSchedules[
+            formatDateKey(date)
+          ] || {};
+
+
+        if (!data.is_holiday) {
+
+          count++;
+
+        }
+
+      }
+
+
+      return count;
+    }
+
+
+    // ==========================================================
+    // GENERATE SCHEDULE
+    // ==========================================================
+
+    function generateSchedule() {
+
+      const picker =
+        document.getElementById(
+          "monthPicker"
+        );
+
+
+      if (!picker || !picker.value) {
+        return;
+      }
+
+
+      const parts =
+        picker.value.split("-");
+
+
+      const year =
+        parseInt(
+          parts[0],
+          10
+        );
+
+
+      const monthIndex =
+        parseInt(
+          parts[1],
+          10
+        ) - 1;
+
+
+      if (
+        Number.isNaN(year) ||
+        Number.isNaN(monthIndex)
+      ) {
+        return;
+      }
+
+
+      const monthName =
+        new Date(
+          year,
+          monthIndex
+        ).toLocaleString(
+          "default",
+          {
+            month: "long",
+            year: "numeric"
+          }
+        );
+
+
+      document.getElementById(
+        "scheduleMonthTitle"
+      ).innerText =
+        `${monthName} Fellowship Schedule`;
+
+
+      const fridays =
+        getFridaysInMonth(
+          year,
+          monthIndex
+        );
+
+
+      const totalFridays =
+        fridays.length;
+
+
+      const tbody =
+        document.getElementById(
+          "scheduleTableBody"
+        );
+
+
+      tbody.innerHTML = "";
+
+
+      fridays.forEach(
+        (friDate, idx) => {
+
+          const weekNum =
+            idx + 1;
+
+
+          const dateKey =
+            formatDateKey(
+              friDate
+            );
+
+
+          const itemData =
+            customSchedules[
+              dateKey
+            ] || {};
+
+
+          /*
+           * Last Friday is always Rest Week.
+           *
+           * Week 3 is Big Group unless
+           * Week 3 is also the last Friday.
+           */
+
+          const isRestWeek =
+            weekNum > 3 ||
+            weekNum === totalFridays;
+
+
+          const isHoliday =
+            itemData.is_holiday === true;
+
+
+          const isBigGroup =
+            weekNum === 3 &&
+            !isRestWeek;
+
+
+          const topicValue =
+            itemData.topic || "";
+
+
+          const hasNotesOrPhotos =
+            Boolean(
+              itemData.notes ||
+              itemData.verse ||
+              (
+                Array.isArray(
+                  itemData.images
+                ) &&
+                itemData.images.length > 0
+              )
+            );
+
+
+          /*
+           * Regular meeting only:
+           * Week 1 + Week 2
+           * not holiday
+           */
+
+          const isRegularMeeting =
+            !isRestWeek &&
+            !isBigGroup &&
+            !isHoliday &&
+            (
+              weekNum === 1 ||
+              weekNum === 2
+            );
+
+
+          const meetingCycleIndex =
+            isRegularMeeting
+              ? getRegularMeetingIndex(
+                  year,
+                  monthIndex,
+                  weekNum
+                )
+              : -1;
+
+
+          const leader =
+            isRegularMeeting
+              ? getCycleMember(
+                  meetingCycleIndex
+                )
+              : "—";
+
+
+          const openPray =
+            isRegularMeeting
+              ? getCycleMember(
+                  meetingCycleIndex + 1
+                )
+              : "—";
+
+
+          const worship =
+            isRegularMeeting
+              ? getCycleMember(
+                  meetingCycleIndex + 2
+                )
+              : "—";
+
+
+          const closePray =
+            isRegularMeeting
+              ? getCycleMember(
+                  meetingCycleIndex + 3
+                )
+              : "—";
+
+
+          const formattedDate =
+            friDate.toLocaleDateString(
+              "en-US",
+              {
+                weekday: "short",
+                month: "short",
+                day: "numeric"
+              }
+            );
+
+
+          const safeDateKey =
+            escapeHtml(dateKey);
+
+
+          const tr =
+            document.createElement(
+              "tr"
+            );
+
+
+          // ====================================================
+          // HOLIDAY
+          // ====================================================
+
+          if (isHoliday) {
+
+            tr.className =
+              "bg-rose-50/50 hover:bg-rose-50 " +
+              "transition text-slate-500";
+
+
+            tr.innerHTML = `
+
+              <td class="py-4 px-4 font-bold text-slate-700">
+
+                ${escapeHtml(formattedDate)}
+
+                <span
+                  class="block text-xs font-normal text-slate-400"
+                >
+                  Week ${weekNum} • 6:30 PM
+                </span>
+
+              </td>
+
+
+              <td class="py-4 px-4 text-center">
+
+                <span
+                  class="inline-flex items-center gap-1
+                         px-2.5 py-1 text-xs font-bold
+                         rounded-full bg-rose-100
+                         text-rose-700"
+                >
+
+                  <i class="fa-solid fa-umbrella-beach"></i>
+
+                  Public Holiday
+
+                </span>
+
+              </td>
+
+
+              <td
+                colspan="4"
+                class="py-4 px-4 text-center
+                       text-slate-400 italic"
+              >
+                No meeting due to holiday
+              </td>
+
+
+              <td class="py-4 px-4">
+
+                <input
+                  type="text"
+                  value="${escapeHtml(topicValue)}"
+                  placeholder="Holiday note..."
+                  onchange="updateTopic('${safeDateKey}', this.value)"
+                  class="w-full bg-transparent
+                         text-xs text-slate-500
+                         focus:outline-none"
+                >
+
+              </td>
+
+
+              <td class="py-4 px-4 text-center">
+                —
+              </td>
+
+
+              <td
+                class="py-4 px-4 text-right no-print"
+              >
+
+                <button
+                  onclick="toggleHoliday('${safeDateKey}')"
+                  class="text-xs font-semibold
+                         text-rose-600 hover:underline"
+                >
+                  Cancel Skip
+                </button>
+
+              </td>
+
+            `;
+
+          }
+
+
+          // ====================================================
+          // REST WEEK
+          // ====================================================
+
+          else if (isRestWeek) {
+
+            tr.className =
+              "bg-amber-50/40 hover:bg-amber-50 " +
+              "transition text-slate-500";
+
+
+            tr.innerHTML = `
+
+              <td class="py-4 px-4 font-bold text-slate-700">
+
+                ${escapeHtml(formattedDate)}
+
+                <span
+                  class="block text-xs font-normal text-slate-400"
+                >
+                  Week ${weekNum} (Last Week)
+                </span>
+
+              </td>
+
+
+              <td class="py-4 px-4 text-center">
+
+                <span
+                  class="inline-flex items-center gap-1
+                         px-2.5 py-1 text-xs font-bold
+                         rounded-full bg-amber-100
+                         text-amber-800"
+                >
+
+                  <i class="fa-solid fa-bed"></i>
+
+                  Rest Week
+
+                </span>
+
+              </td>
+
+
+              <td
+                colspan="4"
+                class="py-4 px-4 text-center
+                       text-slate-400 italic"
+              >
+                Fellowship Break (No Meeting)
+              </td>
+
+
+              <td class="py-4 px-4">
+
+                <input
+                  type="text"
+                  value="${escapeHtml(topicValue)}"
+                  placeholder="Optional note..."
+                  onchange="updateTopic('${safeDateKey}', this.value)"
+                  class="w-full bg-transparent
+                         text-xs text-slate-500
+                         focus:outline-none"
+                >
+
+              </td>
+
+
+              <td class="py-4 px-4 text-center">
+                —
+              </td>
+
+
+              <td
+                class="py-4 px-4 text-right no-print"
+              >
+
+                <button
+                  onclick="toggleHoliday('${safeDateKey}')"
+                  class="text-xs text-slate-400
+                         hover:text-slate-600"
+                >
+                  Mark Holiday
+                </button>
+
+              </td>
+
+            `;
+
+          }
+
+
+          // ====================================================
+          // BIG GROUP
+          // ====================================================
+
+          else if (isBigGroup) {
+
+            const bgLeader =
+              itemData.bg_leader || "";
+
+            const bgOpenPray =
+              itemData.bg_open_pray || "";
+
+            const bgWorship =
+              itemData.bg_worship || "";
+
+            const bgClosePray =
+              itemData.bg_close_pray || "";
+
+
+            tr.className =
+              "bg-purple-50/40 hover:bg-purple-50 " +
+              "transition";
+
+
+            tr.innerHTML = `
+
+              <td
+                class="py-4 px-4 font-bold text-slate-900"
+              >
+
+                ${escapeHtml(formattedDate)}
+
+                <span
+                  class="block text-xs font-medium
+                         text-purple-600"
+                >
+                  Week ${weekNum} • 6:30 PM
+                </span>
+
+              </td>
+
+
+              <td
+                class="py-4 px-4 text-center"
+              >
+
+                <span
+                  class="inline-flex items-center gap-1
+                         px-2.5 py-1 text-xs font-bold
+                         rounded-full bg-purple-100
+                         text-purple-800"
+                >
+
+                  <i class="fa-solid fa-graduation-cap"></i>
+
+                  Big Group
+
+                </span>
+
+              </td>
+
+
+              <td class="py-4 px-4">
+
+                <input
+                  type="text"
+                  value="${escapeHtml(bgLeader)}"
+                  placeholder="Anyone..."
+                  onchange="updateBigGroupRole(
+                    '${safeDateKey}',
+                    'bg_leader',
+                    this.value
+                  )"
+                  class="w-full px-2 py-1
+                         bg-amber-50
+                         border border-amber-200
+                         rounded-lg text-xs font-bold
+                         text-amber-900
+                         placeholder-amber-300
+                         focus:bg-white
+                         focus:ring-2
+                         focus:ring-amber-400
+                         focus:outline-none"
+                >
+
+              </td>
+
+
+              <td class="py-4 px-4">
+
+                <input
+                  type="text"
+                  value="${escapeHtml(bgOpenPray)}"
+                  placeholder="Anyone..."
+                  onchange="updateBigGroupRole(
+                    '${safeDateKey}',
+                    'bg_open_pray',
+                    this.value
+                  )"
+                  class="w-full px-2 py-1
+                         bg-white border border-slate-200
+                         rounded-lg text-xs
+                         font-semibold text-slate-700
+                         focus:ring-2
+                         focus:ring-purple-300
+                         focus:outline-none"
+                >
+
+              </td>
+
+
+              <td class="py-4 px-4">
+
+                <input
+                  type="text"
+                  value="${escapeHtml(bgWorship)}"
+                  placeholder="Anyone..."
+                  onchange="updateBigGroupRole(
+                    '${safeDateKey}',
+                    'bg_worship',
+                    this.value
+                  )"
+                  class="w-full px-2 py-1
+                         bg-white border border-slate-200
+                         rounded-lg text-xs
+                         font-semibold text-slate-700
+                         focus:ring-2
+                         focus:ring-purple-300
+                         focus:outline-none"
+                >
+
+              </td>
+
+
+              <td class="py-4 px-4">
+
+                <input
+                  type="text"
+                  value="${escapeHtml(bgClosePray)}"
+                  placeholder="Anyone..."
+                  onchange="updateBigGroupRole(
+                    '${safeDateKey}',
+                    'bg_close_pray',
+                    this.value
+                  )"
+                  class="w-full px-2 py-1
+                         bg-white border border-slate-200
+                         rounded-lg text-xs
+                         font-semibold text-slate-700
+                         focus:ring-2
+                         focus:ring-purple-300
+                         focus:outline-none"
+                >
+
+              </td>
+
+
+              <td class="py-4 px-4">
+
+                <input
+                  type="text"
+                  value="${escapeHtml(topicValue)}"
+                  placeholder="Big Group Fellowship Topic..."
+                  onchange="updateTopic(
+                    '${safeDateKey}',
+                    this.value
+                  )"
+                  class="w-full px-2.5 py-1.5
+                         bg-purple-50
+                         border border-purple-200
+                         rounded-lg text-xs
+                         font-medium
+                         focus:bg-white
+                         focus:ring-2
+                         focus:ring-purple-400
+                         focus:outline-none"
+                >
+
+              </td>
+
+
+              <td class="py-4 px-4 text-center">
+
+                <button
+                  onclick="openBoardModal(
+                    '${safeDateKey}',
+                    'Week ${weekNum} — Big Group 🎓',
+                    '${escapeHtml(formattedDate)}',
+                    '${escapeHtml(bgLeader || "TBD")}',
+                    '${escapeHtml(bgOpenPray || "TBD")}',
+                    '${escapeHtml(bgWorship || "TBD")}',
+                    '${escapeHtml(bgClosePray || "TBD")}',
+                    true
+                  )"
+                  class="inline-flex items-center
+                         gap-1.5 px-3 py-1.5
+                         rounded-xl text-xs font-bold
+                         transition shadow-sm
+                         ${hasNotesOrPhotos
+                           ? "bg-purple-600 text-white"
+                           : "bg-purple-100 text-purple-700 hover:bg-purple-200"}"
+                >
+
+                  <i
+                    class="fa-solid
+                    ${hasNotesOrPhotos
+                      ? "fa-clipboard-check"
+                      : "fa-graduation-cap"}"
+                  ></i>
+
+                  <span>
+                    ${hasNotesOrPhotos
+                      ? "Board (Active)"
+                      : "Open Board"}
+                  </span>
+
+                </button>
+
+              </td>
+
+
+              <td
+                class="py-4 px-4 text-right no-print"
+              >
+
+                <button
+                  onclick="toggleHoliday('${safeDateKey}')"
+                  class="px-2.5 py-1 rounded-lg
+                         text-xs font-medium
+                         text-slate-500
+                         hover:bg-rose-100
+                         hover:text-rose-700"
+                >
+
+                  <i
+                    class="fa-solid fa-plane-slash mr-1"
+                  ></i>
+
+                  Holiday
+
+                </button>
+
+              </td>
+
+            `;
+
+          }
+
+
+          // ====================================================
+          // REGULAR MEETING
+          // ====================================================
+
+          else {
+
+            tr.className =
+              "hover:bg-sky-50/40 transition";
+
+
+            tr.innerHTML = `
+
+              <td
+                class="py-4 px-4 font-bold text-slate-900"
+              >
+
+                ${escapeHtml(formattedDate)}
+
+                <span
+                  class="block text-xs font-medium
+                         text-faith-600"
+                >
+                  Week ${weekNum} • 6:30 PM
+                </span>
+
+              </td>
+
+
+              <td
+                class="py-4 px-4 text-center"
+              >
+
+                <span
+                  class="inline-flex items-center gap-1
+                         px-2.5 py-1 text-xs font-bold
+                         rounded-full bg-emerald-100
+                         text-emerald-800"
+                >
+
+                  <i class="fa-solid fa-check"></i>
+
+                  Meeting
+
+                </span>
+
+              </td>
+
+
+              <td class="py-4 px-4">
+
+                <span
+                  class="inline-block px-2.5 py-1
+                         bg-amber-50
+                         border border-amber-200
+                         text-amber-900 font-bold
+                         rounded-lg text-xs"
+                >
+                  ${escapeHtml(leader)}
+                </span>
+
+              </td>
+
+
+              <td class="py-4 px-4
+                         text-slate-700
+                         font-semibold">
+
+                ${escapeHtml(openPray)}
+
+              </td>
+
+
+              <td class="py-4 px-4
+                         text-slate-700
+                         font-semibold">
+
+                ${escapeHtml(worship)}
+
+              </td>
+
+
+              <td class="py-4 px-4
+                         text-slate-700
+                         font-semibold">
+
+                ${escapeHtml(closePray)}
+
+              </td>
+
+
+              <td class="py-4 px-4">
+
+                <input
+                  type="text"
+                  value="${escapeHtml(topicValue)}"
+                  placeholder="Type Topic / Scripture..."
+                  onchange="updateTopic(
+                    '${safeDateKey}',
+                    this.value
+                  )"
+                  class="w-full px-2.5 py-1.5
+                         bg-slate-50
+                         border border-slate-200
+                         rounded-lg text-xs
+                         font-medium
+                         focus:bg-white
+                         focus:ring-2
+                         focus:ring-faith-500
+                         focus:outline-none"
+                >
+
+              </td>
+
+
+              <td class="py-4 px-4 text-center">
+
+                <button
+                  onclick="openBoardModal(
+                    '${safeDateKey}',
+                    'Week ${weekNum}',
+                    '${escapeHtml(formattedDate)}',
+                    '${escapeHtml(leader)}',
+                    '${escapeHtml(openPray)}',
+                    '${escapeHtml(worship)}',
+                    '${escapeHtml(closePray)}',
+                    false
+                  )"
+                  class="inline-flex items-center
+                         gap-1.5 px-3 py-1.5
+                         rounded-xl text-xs font-bold
+                         transition shadow-sm
+                         ${hasNotesOrPhotos
+                           ? "bg-faith-600 text-white"
+                           : "bg-slate-100 text-slate-700 hover:bg-slate-200"}"
+                >
+
+                  <i
+                    class="fa-solid
+                    ${hasNotesOrPhotos
+                      ? "fa-clipboard-check"
+                      : "fa-clipboard"}"
+                  ></i>
+
+                  <span>
+                    ${hasNotesOrPhotos
+                      ? "Board (Active)"
+                      : "Open Board"}
+                  </span>
+
+                </button>
+
+              </td>
+
+
+              <td
+                class="py-4 px-4 text-right no-print"
+              >
+
+                <button
+                  onclick="toggleHoliday('${safeDateKey}')"
+                  title="Skip if Public Holiday"
+                  class="px-2.5 py-1 rounded-lg
+                         text-xs font-medium
+                         text-slate-500
+                         hover:bg-rose-100
+                         hover:text-rose-700"
+                >
+
+                  <i
+                    class="fa-solid fa-plane-slash mr-1"
+                  ></i>
+
+                  Holiday
+
+                </button>
+
+              </td>
+
+            `;
+
+          }
+
+
+          tbody.appendChild(tr);
+
+        }
+      );
+    }
+
+
+    // ==========================================================
+    // SAVE COMPLETE SCHEDULE RECORD
+    // Prevents fields from being accidentally erased.
+    // ==========================================================
+
+    async function saveScheduleRecord(dateKey) {
+
+      if (!supabaseClient) {
+        return true;
+      }
+
+
+      const item =
+        customSchedules[dateKey] || {};
+
+
+      showSyncIndicator(true);
+
+
+      try {
+
+        const payload = {
+
+          date_key: dateKey,
+
+          topic: item.topic || "",
+
+          verse: item.verse || "",
+
+          notes: item.notes || "",
+
+          images:
+            Array.isArray(item.images)
+              ? item.images
+              : [],
+
+          is_holiday:
+            Boolean(item.is_holiday),
+
+          bg_leader:
+            item.bg_leader || "",
+
+          bg_open_pray:
+            item.bg_open_pray || "",
+
+          bg_worship:
+            item.bg_worship || "",
+
+          bg_close_pray:
+            item.bg_close_pray || "",
+
+          updated_at:
+            new Date().toISOString()
+
+        };
+
+
+        const { error } =
+          await supabaseClient
+            .from("schedules")
+            .upsert(
+              payload,
+              {
+                onConflict: "date_key"
+              }
+            );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        return true;
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Save schedule error:",
+          error
+        );
+
+        showError(
+          "Could not save schedule to Supabase."
+        );
+
+        return false;
+
+      }
+
+      finally {
+
+        showSyncIndicator(false);
+
+      }
+    }
+
+
+    // ==========================================================
+    // UPDATE TOPIC
+    // ==========================================================
+
+    async function updateTopic(
+      dateKey,
+      topic
+    ) {
+
+      if (!customSchedules[dateKey]) {
+
+        customSchedules[dateKey] = {
+          date_key: dateKey
+        };
+
+      }
+
+
+      customSchedules[dateKey].topic =
+        topic;
+
+
+      generateSchedule();
+
+
+      await saveScheduleRecord(
+        dateKey
+      );
+    }
+
+
+    // ==========================================================
+    // UPDATE BIG GROUP ROLE
+    // ==========================================================
+
+    async function updateBigGroupRole(
+      dateKey,
+      field,
+      value
+    ) {
+
+      if (!customSchedules[dateKey]) {
+
+        customSchedules[dateKey] = {
+          date_key: dateKey
+        };
+
+      }
+
+
+      customSchedules[dateKey][field] =
+        value;
+
+
+      await saveScheduleRecord(
+        dateKey
+      );
+    }
+
+
+    // ==========================================================
+    // HOLIDAY
+    // ==========================================================
+
+    async function toggleHoliday(
+      dateKey
+    ) {
+
+      if (!customSchedules[dateKey]) {
+
+        customSchedules[dateKey] = {
+          date_key: dateKey
+        };
+
+      }
+
+
+      customSchedules[dateKey].is_holiday =
+        !Boolean(
+          customSchedules[dateKey].is_holiday
+        );
+
+
+      /*
+       * Save first.
+       * Then regenerate because changing a holiday
+       * can change the rotation position.
+       */
+
+      const saved =
+        await saveScheduleRecord(
+          dateKey
+        );
+
+
+      if (saved) {
+
+        generateSchedule();
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // BOARD MODAL
+    // ==========================================================
+
+    function openBoardModal(
+      dateKey,
+      weekTag,
+      formattedDate,
+      leader,
+      openPray,
+      worship,
+      closePray,
+      isBigGroup
+    ) {
+
+      document.getElementById(
+        "activeBoardDateKey"
+      ).value = dateKey;
+
+
+      document.getElementById(
+        "boardWeekTag"
+      ).innerText = weekTag;
+
+
+      document.getElementById(
+        "boardDateTitle"
+      ).innerText =
+        `${formattedDate} • 6:30 PM`;
+
+
+      document.getElementById(
+        "boardLeaderName"
+      ).innerText = leader;
+
+
+      document.getElementById(
+        "boardOpenPrayName"
+      ).innerText = openPray;
+
+
+      document.getElementById(
+        "boardWorshipName"
+      ).innerText = worship;
+
+
+      document.getElementById(
+        "boardClosePrayName"
+      ).innerText = closePray;
+
+
+      const header =
+        document.getElementById(
+          "boardModalHeader"
+        );
+
+
+      const title =
+        document.getElementById(
+          "boardModalTitle"
+        );
+
+
+      if (isBigGroup) {
+
+        header.className =
+          "px-6 py-4 bg-gradient-to-r " +
+          "from-purple-700 to-purple-500 " +
+          "text-white flex justify-between " +
+          "items-center";
+
+
+        title.innerText =
+          "🎓 Big Group Graduated Fellowship Board";
+
+      }
+
+      else {
+
+        header.className =
+          "px-6 py-4 bg-gradient-to-r " +
+          "from-faith-700 to-faith-600 " +
+          "text-white flex justify-between " +
+          "items-center";
+
+
+        title.innerText =
+          "Fellowship Study Board";
+
+      }
+
+
+      const item =
+        customSchedules[dateKey] || {};
+
+
+      document.getElementById(
+        "boardTopicInput"
+      ).value =
+        item.topic || "";
+
+
+      document.getElementById(
+        "boardVerseInput"
+      ).value =
+        item.verse || "";
+
+
+      document.getElementById(
+        "boardNotesInput"
+      ).value =
+        item.notes || "";
+
+
+      activeBoardPhotos =
+        Array.isArray(item.images)
+          ? [...item.images]
+          : [];
+
+
+      renderBoardPhotos();
+
+
+      document.getElementById(
+        "boardModal"
+      ).classList.remove("hidden");
+
+
+      document.getElementById(
+        "boardModal"
+      ).classList.add("flex");
+    }
+
+
+    // ==========================================================
+    // CLOSE BOARD
+    // ==========================================================
+
+    function closeBoardModal() {
+
+      document.getElementById(
+        "boardModal"
+      ).classList.add("hidden");
+
+
+      document.getElementById(
+        "boardModal"
+      ).classList.remove("flex");
+
+    }
+
+
+    // ==========================================================
+    // RENDER PHOTOS
+    // ==========================================================
+
+    function renderBoardPhotos() {
+
+      const gallery =
+        document.getElementById(
+          "boardPhotoGallery"
+        );
+
+
+      gallery.innerHTML = "";
+
+
+      if (
+        activeBoardPhotos.length === 0
+      ) {
+
+        gallery.innerHTML = `
+
+          <span
+            class="col-span-full
+                   text-center text-xs
+                   text-slate-400
+                   py-3 italic"
+          >
+            No photos uploaded yet.
+            Attach sermon slides or meeting photos!
+          </span>
+
+        `;
+
+        return;
+      }
+
+
+      activeBoardPhotos.forEach(
+        (imgSrc, index) => {
+
+          const div =
+            document.createElement(
+              "div"
+            );
+
+
+          div.className =
+            "relative rounded-xl overflow-hidden " +
+            "aspect-square group border " +
+            "border-slate-200 shadow-sm";
+
+
+          const img =
+            document.createElement(
+              "img"
+            );
+
+
+          img.src = imgSrc;
+
+          img.className =
+            "w-full h-full object-cover";
+
+          img.alt =
+            "Fellowship photo";
+
+
+          const button =
+            document.createElement(
+              "button"
+            );
+
+
+          button.type = "button";
+
+          button.className =
+            "absolute top-1 right-1 w-6 h-6 " +
+            "rounded-full bg-slate-900/80 text-white " +
+            "flex items-center justify-center " +
+            "text-xs opacity-0 group-hover:opacity-100 " +
+            "transition";
+
+
+          button.title =
+            "Delete Photo";
+
+
+          button.innerHTML =
+            '<i class="fa-solid fa-xmark"></i>';
+
+
+          button.onclick =
+            () => removeBoardPhoto(index);
+
+
+          div.appendChild(img);
+
+          div.appendChild(button);
+
+          gallery.appendChild(div);
+
+        }
+      );
+    }
+
+
+    // ==========================================================
+    // IMAGE UPLOAD
+    // ==========================================================
+
+    function handleImageUpload(e) {
+
+      const file =
+        e.target.files[0];
+
+
+      if (!file) {
+        return;
+      }
+
+
+      if (!file.type.startsWith("image/")) {
+
+        showError(
+          "Please select an image file."
+        );
+
+        e.target.value = "";
+
+        return;
+      }
+
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        function(event) {
+
+          const img =
+            new Image();
+
+
+          img.onload =
+            function() {
+
+              const canvas =
+                document.createElement(
+                  "canvas"
+                );
+
+
+              const maxDim = 800;
+
+
+              let width =
+                img.width;
+
+              let height =
+                img.height;
+
+
+              if (
+                width > height &&
+                width > maxDim
+              ) {
+
+                height *=
+                  maxDim / width;
+
+                width =
+                  maxDim;
+
+              }
+
+              else if (
+                height > maxDim
+              ) {
+
+                width *=
+                  maxDim / height;
+
+                height =
+                  maxDim;
+
+              }
+
+
+              canvas.width =
+                Math.round(width);
+
+              canvas.height =
+                Math.round(height);
+
+
+              const ctx =
+                canvas.getContext(
+                  "2d"
+                );
+
+
+              ctx.drawImage(
+                img,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+              );
+
+
+              const compressedBase64 =
+                canvas.toDataURL(
+                  "image/jpeg",
+                  0.7
+                );
+
+
+              activeBoardPhotos.push(
+                compressedBase64
+              );
+
+
+              renderBoardPhotos();
+
+            };
+
+
+          img.src =
+            event.target.result;
+
+        };
+
+
+      reader.readAsDataURL(file);
+
+
+      e.target.value = "";
+    }
+
+
+    // ==========================================================
+    // REMOVE PHOTO
+    // ==========================================================
+
+    function removeBoardPhoto(index) {
+
+      activeBoardPhotos.splice(
+        index,
+        1
+      );
+
+
+      renderBoardPhotos();
+    }
+
+
+    // ==========================================================
+    // SAVE BOARD
+    // ==========================================================
+
+    async function saveAndCloseBoard() {
+
+      const dateKey =
+        document.getElementById(
+          "activeBoardDateKey"
+        ).value;
+
+
+      if (!dateKey) {
+        return;
+      }
+
+
+      const topic =
+        document.getElementById(
+          "boardTopicInput"
+        ).value.trim();
+
+
+      const verse =
+        document.getElementById(
+          "boardVerseInput"
+        ).value.trim();
+
+
+      const notes =
+        document.getElementById(
+          "boardNotesInput"
+        ).value.trim();
+
+
+      if (!customSchedules[dateKey]) {
+
+        customSchedules[dateKey] = {
+          date_key: dateKey
+        };
+
+      }
+
+
+      customSchedules[dateKey].topic =
+        topic;
+
+
+      customSchedules[dateKey].verse =
+        verse;
+
+
+      customSchedules[dateKey].notes =
+        notes;
+
+
+      customSchedules[dateKey].images =
+        [...activeBoardPhotos];
+
+
+      const saved =
+        await saveScheduleRecord(
+          dateKey
+        );
+
+
+      if (saved) {
+
+        closeBoardModal();
+
+        generateSchedule();
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // MEMBERS CHIP LIST
+    // ==========================================================
+
+    function renderMembersChipList() {
+
+      const container =
+        document.getElementById(
+          "membersChipList"
+        );
+
+
+      document.getElementById(
+        "memberCountBadge"
+      ).innerText =
+        members.length;
+
+
+      container.innerHTML = "";
+
+
+      members.forEach(
+        (member, index) => {
+
+          const chip =
+            document.createElement(
+              "span"
+            );
+
+
+          chip.className =
+            "inline-flex items-center gap-1.5 " +
+            "px-2.5 py-1 bg-slate-100 " +
+            "text-slate-700 rounded-lg " +
+            "text-xs font-semibold";
+
+
+          chip.innerHTML = `
+
+            <span
+              class="w-1.5 h-1.5 rounded-full
+                     bg-faith-600"
+            ></span>
+
+            <span>
+              ${index + 1}. ${escapeHtml(member.name)}
+            </span>
+
+          `;
+
+
+          container.appendChild(
+            chip
+          );
+
+        }
+      );
+    }
+
+
+    // ==========================================================
+    // MEMBER MODAL
+    // ==========================================================
+
+    function renderModalMembers() {
+
+      const list =
+        document.getElementById(
+          "modalMemberList"
+        );
+
+
+      if (!list) return;
+
+
+      list.innerHTML = "";
+
+
+      if (members.length === 0) {
+
+        list.innerHTML = `
+
+          <li
+            class="p-3 text-center
+                   text-xs text-slate-400"
+          >
+            No members found.
+          </li>
+
+        `;
+
+        return;
+      }
+
+
+      members.forEach(
+        (member, index) => {
+
+          const li =
+            document.createElement(
+              "li"
+            );
+
+
+          li.className =
+            "member-row flex items-center " +
+            "justify-between p-2.5 " +
+            "bg-slate-50 border " +
+            "border-slate-200 rounded-xl";
+
+
+          const isFirst =
+            index === 0;
+
+
+          const isLast =
+            index === members.length - 1;
+
+
+          li.innerHTML = `
+
+            <div
+              class="flex items-center gap-2.5"
+            >
+
+              <span
+                class="w-7 h-7 rounded-full
+                       bg-faith-100 text-faith-700
+                       flex items-center justify-center
+                       text-xs font-bold"
+              >
+                ${index + 1}
+              </span>
+
+              <span
+                class="font-bold text-slate-800"
+              >
+                ${escapeHtml(member.name)}
+              </span>
+
+            </div>
+
+
+            <div
+              class="flex items-center gap-1"
+            >
+
+              <button
+                onclick="moveMemberUp(${member.id})"
+                ${isFirst ? "disabled" : ""}
+                class="w-7 h-7 rounded-lg
+                       flex items-center justify-center
+                       ${isFirst
+                         ? "text-slate-200 cursor-not-allowed"
+                         : "text-slate-500 hover:bg-sky-100 hover:text-faith-700"}"
+                title="Move Up"
+              >
+                <i class="fa-solid fa-chevron-up text-xs"></i>
+              </button>
+
+
+              <button
+                onclick="moveMemberDown(${member.id})"
+                ${isLast ? "disabled" : ""}
+                class="w-7 h-7 rounded-lg
+                       flex items-center justify-center
+                       ${isLast
+                         ? "text-slate-200 cursor-not-allowed"
+                         : "text-slate-500 hover:bg-sky-100 hover:text-faith-700"}"
+                title="Move Down"
+              >
+                <i class="fa-solid fa-chevron-down text-xs"></i>
+              </button>
+
+
+              <button
+                onclick="removeMember(${member.id})"
+                class="w-7 h-7 rounded-lg
+                       flex items-center justify-center
+                       text-slate-400
+                       hover:bg-rose-100
+                       hover:text-rose-600"
+                title="Remove Member"
+              >
+                <i
+                  class="fa-solid fa-trash-can text-xs"
+                ></i>
+              </button>
+
+            </div>
+
+          `;
+
+
+          list.appendChild(li);
+
+        }
+      );
+    }
+
+
+    // ==========================================================
+    // ADD MEMBER
+    // ==========================================================
+
+    async function addMember(e) {
+
+      e.preventDefault();
+
+
+      const input =
+        document.getElementById(
+          "newMemberName"
+        );
+
+
+      const name =
+        input.value.trim();
+
+
+      if (!name) {
+        return;
+      }
+
+
+      if (
+        members.some(
+          member =>
+            member.name.toLowerCase() ===
+            name.toLowerCase()
+        )
+      ) {
+
+        showError(
+          "That member already exists."
+        );
+
+        return;
+      }
+
+
+      const nextSortOrder =
+        members.length + 1;
+
+
+      if (supabaseClient) {
+
+        showSyncIndicator(true);
+
+
+        try {
+
+          const { data, error } =
+            await supabaseClient
+              .from("members")
+              .insert([
+                {
+                  name: name,
+                  sort_order: nextSortOrder
+                }
+              ])
+              .select()
+              .single();
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          members.push(data);
+
+
+          sortMembersLocally();
+
+
+          renderMembersChipList();
+
+          renderModalMembers();
+
+          generateSchedule();
+
+
+          input.value = "";
+
+
+        }
+
+        catch (error) {
+
+          console.error(
+            "Add member error:",
+            error
+          );
+
+          showError(
+            "Could not add member to Supabase."
+          );
+
+        }
+
+        finally {
+
+          showSyncIndicator(false);
+
+        }
+
+      }
+
+      else {
+
+        members.push({
+          id: Date.now(),
+          name: name,
+          sort_order: nextSortOrder
+        });
+
+
+        sortMembersLocally();
+
+
+        input.value = "";
+
+
+        renderMembersChipList();
+
+        renderModalMembers();
+
+        generateSchedule();
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // REMOVE MEMBER
+    // ==========================================================
+
+    async function removeMember(id) {
+
+      /*
+       * Four people are required because there are
+       * four regular roles.
+       */
+
+      if (members.length <= 4) {
+
+        showError(
+          "At least 4 members are required " +
+          "for all roles."
+        );
+
+        return;
+      }
+
+
+      const member =
+        members.find(
+          m => Number(m.id) === Number(id)
+        );
+
+
+      if (!member) {
+        return;
+      }
+
+
+      const confirmed =
+        confirm(
+          `Remove "${member.name}" from the rotation?`
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      if (supabaseClient) {
+
+        showSyncIndicator(true);
+
+
+        try {
+
+          const { error } =
+            await supabaseClient
+              .from("members")
+              .delete()
+              .eq("id", id);
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          members =
+            members.filter(
+              m =>
+                Number(m.id) !==
+                Number(id)
+            );
+
+
+          await normalizeMemberOrder();
+
+
+          renderMembersChipList();
+
+          renderModalMembers();
+
+          generateSchedule();
+
+        }
+
+        catch (error) {
+
+          console.error(
+            "Remove member error:",
+            error
+          );
+
+          showError(
+            "Could not remove member from Supabase."
+          );
+
+        }
+
+        finally {
+
+          showSyncIndicator(false);
+
+        }
+
+      }
+
+      else {
+
+        members =
+          members.filter(
+            m =>
+              Number(m.id) !==
+              Number(id)
+          );
+
+
+        members.forEach(
+          (m, index) => {
+            m.sort_order =
+              index + 1;
+          }
+        );
+
+
+        renderMembersChipList();
+
+        renderModalMembers();
+
+        generateSchedule();
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // MOVE MEMBER UP
+    // ==========================================================
+
+    async function moveMemberUp(id) {
+
+      const index =
+        members.findIndex(
+          m =>
+            Number(m.id) ===
+            Number(id)
+        );
+
+
+      if (
+        index <= 0
+      ) {
+        return;
+      }
+
+
+      await swapMemberPositions(
+        index,
+        index - 1
+      );
+    }
+
+
+    // ==========================================================
+    // MOVE MEMBER DOWN
+    // ==========================================================
+
+    async function moveMemberDown(id) {
+
+      const index =
+        members.findIndex(
+          m =>
+            Number(m.id) ===
+            Number(id)
+        );
+
+
+      if (
+        index === -1 ||
+        index >= members.length - 1
+      ) {
+        return;
+      }
+
+
+      await swapMemberPositions(
+        index,
+        index + 1
+      );
+    }
+
+
+    // ==========================================================
+    // SWAP MEMBER POSITIONS
+    // ==========================================================
+
+    async function swapMemberPositions(
+      indexA,
+      indexB
+    ) {
+
+      const memberA =
+        members[indexA];
+
+      const memberB =
+        members[indexB];
+
+
+      if (!memberA || !memberB) {
+        return;
+      }
+
+
+      /*
+       * Change locally first for immediate UI.
+       */
+
+      const oldA =
+        memberA.sort_order;
+
+      memberA.sort_order =
+        memberB.sort_order;
+
+      memberB.sort_order =
+        oldA;
+
+
+      sortMembersLocally();
+
+
+      renderMembersChipList();
+
+      renderModalMembers();
+
+      generateSchedule();
+
+
+      /*
+       * Save to Supabase.
+       */
+
+      if (supabaseClient) {
+
+        showSyncIndicator(true);
+
+
+        try {
+
+          /*
+           * Update both records.
+           */
+
+          const results =
+            await Promise.all([
+
+              supabaseClient
+                .from("members")
+                .update({
+                  sort_order:
+                    memberA.sort_order
+                })
+                .eq(
+                  "id",
+                  memberA.id
+                ),
+
+              supabaseClient
+                .from("members")
+                .update({
+                  sort_order:
+                    memberB.sort_order
+                })
+                .eq(
+                  "id",
+                  memberB.id
+                )
+
+            ]);
+
+
+          const firstError =
+            results.find(
+              result => result.error
+            );
+
+
+          if (firstError) {
+            throw firstError.error;
+          }
+
+
+          /*
+           * Normalize to 1,2,3,4...
+           */
+
+          await normalizeMemberOrder();
+
+        }
+
+        catch (error) {
+
+          console.error(
+            "Move member error:",
+            error
+          );
+
+          showError(
+            "Could not save the new rotation order."
+          );
+
+
+          /*
+           * Reload from Supabase if saving fails.
+           */
+
+          await fetchMembers();
+
+        }
+
+        finally {
+
+          showSyncIndicator(false);
+
+        }
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // SORT LOCAL MEMBERS
+    // ==========================================================
+
+    function sortMembersLocally() {
+
+      members.sort(
+        (a, b) =>
+          Number(a.sort_order || 0) -
+          Number(b.sort_order || 0)
+      );
+
+    }
+
+
+    // ==========================================================
+    // NORMALIZE MEMBER ORDER
+    //
+    // Makes order exactly:
+    // 1, 2, 3, 4...
+    // ==========================================================
+
+    async function normalizeMemberOrder() {
+
+      sortMembersLocally();
+
+
+      members.forEach(
+        (member, index) => {
+
+          member.sort_order =
+            index + 1;
+
+        }
+      );
+
+
+      if (!supabaseClient) {
+        return;
+      }
+
+
+      /*
+       * Save each member.
+       */
+
+      const updates =
+        members.map(
+          member =>
+            supabaseClient
+              .from("members")
+              .update({
+                sort_order:
+                  member.sort_order
+              })
+              .eq(
+                "id",
+                member.id
+              )
+        );
+
+
+      const results =
+        await Promise.all(
+          updates
+        );
+
+
+      const failed =
+        results.find(
+          result => result.error
+        );
+
+
+      if (failed) {
+
+        throw failed.error;
+
+      }
+
+
+      renderMembersChipList();
+
+      renderModalMembers();
+
+      generateSchedule();
+    }
+
+
+    // ==========================================================
+    // OPEN MEMBER MODAL
+    // ==========================================================
+
+    function openMemberModal() {
+
+      renderModalMembers();
+
+
+      document.getElementById(
+        "memberModal"
+      ).classList.remove("hidden");
+
+
+      document.getElementById(
+        "memberModal"
+      ).classList.add("flex");
+
+
+      setTimeout(
+        () => {
+
+          document.getElementById(
+            "newMemberName"
+          )?.focus();
+
+        },
+        100
+      );
+    }
+
+
+    // ==========================================================
+    // CLOSE MEMBER MODAL
+    // ==========================================================
+
+    function closeMemberModal() {
+
+      document.getElementById(
+        "memberModal"
+      ).classList.add("hidden");
+
+
+      document.getElementById(
+        "memberModal"
+      ).classList.remove("flex");
+
+    }
+
+
+    // ==========================================================
+    // SYNC INDICATOR
+    // ==========================================================
+
+    function showSyncIndicator(
+      show
+    ) {
+
+      const el =
+        document.getElementById(
+          "savingIndicator"
+        );
+
+
+      if (show) {
+
+        el.classList.remove(
+          "hidden"
+        );
+
+        el.classList.add(
+          "flex"
+        );
+
+      }
+
+      else {
+
+        el.classList.add(
+          "hidden"
+        );
+
+        el.classList.remove(
+          "flex"
+        );
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // ERROR MESSAGE
+    // ==========================================================
+
+    function showError(
+      message
+    ) {
+
+      /*
+       * Simple alert for now.
+       * Can be replaced with a toast later.
+       */
+
+      alert(message);
+
+    }
+
+
+    // ==========================================================
+    // ESC KEY
+    // ==========================================================
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Escape"
+        ) {
+
+          closeBoardModal();
+
+          closeMemberModal();
+
+        }
+
+      }
+    );
+
+
+    // ==========================================================
+    // INITIALIZATION
+    // ==========================================================
+
+    window.addEventListener(
+      "DOMContentLoaded",
+      async () => {
+
+        const now =
+          new Date();
+
+
+        document.getElementById(
+          "monthPicker"
+        ).value =
+          `${now.getFullYear()}-${String(
+            now.getMonth() + 1
+          ).padStart(2, "0")}`;
+
+
+        await autoConnectSupabase();
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
+```
