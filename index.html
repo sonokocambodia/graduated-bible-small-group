@@ -327,9 +327,7 @@
 
     // Regular fellowship leader rotation: Week 1 & Week 2 only.
     // Week 3 Big Group and rest/holiday weeks do NOT advance the rotation.
-    // Members are loaded from the Supabase `members` table in `sort_order`.
-    // New members are added to the end of that order and automatically join
-    // the rotation.
+    // Rotation order is loaded dynamically from the SQL `members.sort_order`.
     const ROTATION_START_YEAR = 2026;
     const ROTATION_START_MONTH = 0; // January 2026
     let supabaseClient = null;
@@ -378,10 +376,14 @@
 
       if (!data || data.length === 0) {
         const seedPayload = DEFAULT_MEMBERS.map((name, index) => ({ name, sort_order: index + 1 }));
-        const { data: seeded } = await supabaseClient.from('members').insert(seedPayload).select();
-        if (seeded) members = seeded;
+        const { data: seeded, error: seedError } = await supabaseClient
+          .from('members')
+          .insert(seedPayload)
+          .select();
+        if (seedError) throw seedError;
+        members = (seeded || []).sort((a, b) => (a.sort_order ?? 999999) - (b.sort_order ?? 999999));
       } else {
-        members = data;
+        members = data.sort((a, b) => (a.sort_order ?? 999999) - (b.sort_order ?? 999999));
       }
 
       renderMembersChipList();
@@ -425,21 +427,12 @@
       return `${y}-${m}-${day}`;
     }
 
-    // Get a member from the CURRENT SQL member rotation order.
-    // This replaces the old fixed LEADER_CYCLE so newly-added members
-    // automatically participate in Leader / Prayer / Worship rotation.
     function getCycleMember(index) {
+      // Always use the current SQL-backed member order.
+      // New members are appended to the end of this array.
       if (!members || members.length === 0) return "—";
-
-      const rotationMembers = [...members].sort((a, b) => {
-        const aOrder = Number.isFinite(Number(a.sort_order)) ? Number(a.sort_order) : Number.MAX_SAFE_INTEGER;
-        const bOrder = Number.isFinite(Number(b.sort_order)) ? Number(b.sort_order) : Number.MAX_SAFE_INTEGER;
-        if (aOrder !== bOrder) return aOrder - bOrder;
-        return Number(a.id || 0) - Number(b.id || 0);
-      });
-
-      const safeIndex = ((index % rotationMembers.length) + rotationMembers.length) % rotationMembers.length;
-      return rotationMembers[safeIndex].name;
+      const safeIndex = ((index % members.length) + members.length) % members.length;
+      return members[safeIndex]?.name || "—";
     }
 
     // Returns the zero-based position of a regular meeting in the continuous
@@ -913,51 +906,58 @@
 
     async function addMember(e) {
       e.preventDefault();
+
       const input = document.getElementById('newMemberName');
       const name = input.value.trim();
       if (!name) return;
 
-      // Prevent duplicate member names.
+      // Prevent duplicate names, ignoring capitalization and spaces.
       const duplicate = members.some(m =>
         String(m.name || '').trim().toLowerCase() === name.toLowerCase()
       );
       if (duplicate) {
         alert(`Member "${name}" already exists.`);
-        input.focus();
         return;
       }
 
-      // Always add the new member AFTER the existing SQL rotation order.
-      const maxSortOrder = members.reduce((max, m) => {
-        const order = Number(m.sort_order);
-        return Number.isFinite(order) ? Math.max(max, order) : max;
-      }, 0);
-      const nextSortOrder = maxSortOrder + 1;
-
       if (supabaseClient) {
+        // Use the highest SQL sort_order + 1 so the new member is always
+        // appended to the end of the rotation, even after deletions.
+        const { data: lastRows, error: orderError } = await supabaseClient
+          .from('members')
+          .select('sort_order')
+          .order('sort_order', { ascending: false })
+          .limit(1);
+
+        if (orderError) {
+          console.error('Could not read member rotation order:', orderError);
+          alert('Could not determine the next rotation order.');
+          return;
+        }
+
+        const highestOrder = lastRows && lastRows.length
+          ? Number(lastRows[0].sort_order) || 0
+          : 0;
+
         const { data, error } = await supabaseClient
           .from('members')
-          .insert([{ name, sort_order: nextSortOrder }])
+          .insert([{ name, sort_order: highestOrder + 1 }])
           .select()
           .single();
 
         if (error) {
-          console.error('Add member error:', error);
+          console.error('Could not add member:', error);
           alert(`Could not add member: ${error.message}`);
           return;
         }
 
-        // SQL is the source of truth. The inserted row now contains the
-        // member's persistent sort_order, so all connected users get the
-        // same rotation order through the realtime subscription.
         members.push(data);
-        members.sort((a, b) => {
-          const ao = Number(a.sort_order) || 0;
-          const bo = Number(b.sort_order) || 0;
-          return ao - bo || Number(a.id || 0) - Number(b.id || 0);
-        });
+        members.sort((a, b) => (a.sort_order ?? 999999) - (b.sort_order ?? 999999));
       } else {
-        members.push({ id: Date.now(), name, sort_order: nextSortOrder });
+        // Local fallback when Supabase is unavailable.
+        const highestOrder = members.reduce((max, m) => Math.max(max, Number(m.sort_order) || 0), 0);
+        members.push({ id: Date.now(), name, sort_order: highestOrder + 1 });
+        members.sort((a, b) => (a.sort_order ?? 999999) - (b.sort_order ?? 999999));
       }
 
       input.value = '';
@@ -972,12 +972,26 @@
         return;
       }
 
+      const member = members.find(m => m.id === id);
+      if (!member) return;
+
+      if (!confirm(`Remove ${member.name} from the rotation?`)) return;
+
       if (supabaseClient) {
-        await supabaseClient.from('members').delete().eq('id', id);
-        members = members.filter(m => m.id !== id);
-      } else {
-        members = members.filter(m => m.id !== id);
+        const { error } = await supabaseClient
+          .from('members')
+          .delete()
+          .eq('id', id);
+
+        if (error) {
+          console.error('Could not remove member:', error);
+          alert(`Could not remove member: ${error.message}`);
+          return;
+        }
       }
+
+      members = members.filter(m => m.id !== id);
+      members.sort((a, b) => (a.sort_order ?? 999999) - (b.sort_order ?? 999999));
 
       renderModalMembers();
       renderMembersChipList();
